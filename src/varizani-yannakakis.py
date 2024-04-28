@@ -81,7 +81,7 @@ def collapse_graph(G, cut_vector):
     """
     Given a graph G and a cut, represented by its binary vector, return the collapsed graph.
     """
-    # Separate the nodes into S and T
+    # Separate the nodes into sets S and T
     nodes = list(G.nodes)
     S = []
     T = []
@@ -101,6 +101,24 @@ def collapse_graph(G, cut_vector):
         G_collapse = nx.contracted_nodes(G_collapse, 'S', node, self_loops=False)
     for node in T:
         G_collapse = nx.contracted_nodes(G_collapse, 'T', node, self_loops=False)
+
+    # Set all capacities to 0
+    for edge in G_collapse.edges:
+        G_collapse[edge[0]][edge[1]]['capacity'] = 0
+
+    # Sum the capacities of the edges coming out of S and T
+    for node in S:
+        for neighbor in G.neighbors(node):
+            if neighbor not in S and neighbor not in T:
+                G_collapse['S'][neighbor]['capacity'] += G[node][neighbor]['capacity']
+            if neighbor in T:
+                G_collapse['S']['T']['capacity'] += G[node][neighbor]['capacity']
+    for node in T:
+        for neighbor in G.neighbors(node):
+            if neighbor not in T and neighbor not in S:
+                G_collapse['T'][neighbor]['capacity'] += G[node][neighbor]['capacity']
+            if neighbor in S:
+                G_collapse['T']['S']['capacity'] += G[node][neighbor]['capacity']
     
     return G_collapse
 
@@ -152,10 +170,10 @@ if __name__ == '__main__':
 
     #print(get_mother_node(["1011", "1010"]))
     #print(format(0, '08b'))
-    G = collapse_graph(G, '0011')
-    nx.draw(G, with_labels=True, font_weight='bold')
+    #G = collapse_graph(G, '1100')
+    pos = nx.spring_layout(G)
     edges = {edge: G[edge[0]][edge[1]]['capacity'] for edge in G.edges}
-    nx.draw_networkx_edge_labels(G, pos=nx.spring_layout(G), edge_labels=edges)
-    #nx.draw(G, with_labels=True, font_weight='bold')
+    nx.draw(G, pos, with_labels=True)
+    nx.draw_networkx_edge_labels(G, pos, edge_labels=edges)
 
     plt.show()
