@@ -131,19 +131,20 @@ def varizani_yannakakis(G):
     # Tuple of min cut value and partion of nodes
     min_cut_value, min_cut_partition = global_min_cut(G)
 
-    min_cut_vector = cut_to_vector(G, min_cut_partition, '')
+    min_cut_vector = cut_to_vector(G, min_cut_partition)
     
     # Initialize priority queue with the min cut value and all possible vectors
-    queue = PriorityQueue().put((min_cut_value, get_all_leaf_vectors(len(G.nodes))))
+    queue = PriorityQueue()
+    queue.put((min_cut_value, get_all_leaf_vectors(len(G.nodes))))
 
     while not queue.empty():
         current_cut = queue.get()
         enumerated_cuts.append(current_cut)
         immediate_children = get_immediate_children(get_mother_node(current_cut[1]), min_cut_vector)
         for child in immediate_children:
-            # TODO: Calculate the min cut value of the child
-            # queue.put((min_cut_value, child_partition))
-            pass
+            child_value, child_partition = global_min_cut(collapse_graph(G, child))
+            print(child_partition)
+            queue.put((child_value, child_partition))
 
     return min_cut_vector
 
@@ -165,15 +166,15 @@ if __name__ == '__main__':
     G2.add_edge(3, 1, capacity=3)
 
 
-    cut = minimum_cut(G, 1, 4)
-    #print(varizani_yannakakis(G2))
+    # cut = minimum_cut(G, 1, 4)
+    print(varizani_yannakakis(G))
 
-    #print(get_mother_node(["1011", "1010"]))
-    #print(format(0, '08b'))
-    #G = collapse_graph(G, '1100')
-    pos = nx.spring_layout(G)
-    edges = {edge: G[edge[0]][edge[1]]['capacity'] for edge in G.edges}
-    nx.draw(G, pos, with_labels=True)
-    nx.draw_networkx_edge_labels(G, pos, edge_labels=edges)
+    # print(get_mother_node(["1011", "1010"]))
+    # print(format(0, '08b'))
+    # G = collapse_graph(G, '1100')
+    # pos = nx.spring_layout(G)
+    # edges = {edge: G[edge[0]][edge[1]]['capacity'] for edge in G.edges}
+    # nx.draw(G, pos, with_labels=True)
+    # nx.draw_networkx_edge_labels(G, pos, edge_labels=edges)
 
-    plt.show()
+    # plt.show()
