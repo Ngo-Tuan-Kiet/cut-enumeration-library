@@ -18,18 +18,18 @@ def cut_to_vector(G, cut):
         else:
             # Node is in T
             vector += '1'
-    
+
     return vector
 
 
-def get_all_vectors(n):
+def get_all_leaf_vectors(n, internal_vector='') -> list[str]:
     """
-    Given an integer n, return all possible binary vectors of length n.
+    Given an integer n and an optional internal node vector, return all possible leaf vectors of length n.
     """
-    return [''.join(seq) for seq in itertools.product("01", repeat=n)] 
+    return [internal_vector + ''.join(seq) for seq in itertools.product("01", repeat=n - len(internal_vector))]
 
 
-def get_immediate_children(internal_vector, leaf_vector):
+def get_immediate_children(internal_vector, leaf_vector) -> list[str]:
     """
     Given the vector of an internal node and a leaf node, return the immediate children of the path from internal node to leaf node.
     """
@@ -43,6 +43,21 @@ def get_immediate_children(internal_vector, leaf_vector):
             children.append(child)
 
     return children
+
+
+def get_mother_node(leaves) -> str:
+    """
+    Given a list of leaf nodes, return the mother node of the leaves.
+    """
+    mother_node = ''
+    for i in range(len(leaves[0])):
+        if all(leaf[i] == leaves[0][i] for leaf in leaves):
+            mother_node += leaves[0][i]
+        else:
+            break
+
+    return mother_node
+
 
 def global_min_cut(G):
     """
@@ -61,9 +76,10 @@ def global_min_cut(G):
 
     return min_s_cut if min_s_cut[0] <= min_t_cut[0] else min_t_cut
 
+
 def varizani_yannakakis(G):
     """
-    Varizani-Yannakakis algorithm forenumerating the min cuts of a graph G.
+    Varizani-Yannakakis algorithm for enumerating all min-cuts of a graph G.
     """
     enumerated_cuts = []
     # Tuple of min cut value and partion of nodes
@@ -72,12 +88,16 @@ def varizani_yannakakis(G):
     min_cut_vector = cut_to_vector(G, min_cut_partition, '')
     
     # Initialize priority queue with the min cut value and all possible vectors
-    queue = PriorityQueue().put((min_cut_value, get_all_vectors(len(G.nodes))))
+    queue = PriorityQueue().put((min_cut_value, get_all_leaf_vectors(len(G.nodes))))
 
     while not queue.empty():
         current_cut = queue.get()
         enumerated_cuts.append(current_cut)
-        immediate_children = get_immediate_children()
+        immediate_children = get_immediate_children(get_mother_node(current_cut[1]), min_cut_vector)
+        for child in immediate_children:
+            # TODO: Calculate the min cut value of the child
+            # queue.put((min_cut_value, child_partition))
+            pass
 
     return min_cut_vector
 
@@ -99,11 +119,10 @@ if __name__ == '__main__':
     G2.add_edge(3, 1, capacity=3)
 
 
-
     cut = minimum_cut(G, 1, 4)
     # print(varizani_yannakakis(G2))
 
-    print(get_immediate_children('', '1011'))
+    print(get_mother_node(["1011", "1010"]))
     # print(format(0, '08b'))
 
     #nx.draw(G_123, with_labels=True, font_weight='bold')
