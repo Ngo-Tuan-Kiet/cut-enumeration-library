@@ -102,9 +102,10 @@ def collapse_graph(G, cut_vector):
     for node in T:
         G_collapse = nx.contracted_nodes(G_collapse, 'T', node, self_loops=False)
 
-    # Set all capacities to 0
+    # Set capacities to 0 for edges connected to S or T
     for edge in G_collapse.edges:
-        G_collapse[edge[0]][edge[1]]['capacity'] = 0
+        if edge[0] or edge[1] in ['S', 'T']:
+            G_collapse[edge[0]][edge[1]]['capacity'] = 0
 
     # Sum the capacities of the edges coming out of S and T
     for node in S:
