@@ -45,14 +45,14 @@ def get_immediate_children(internal_vector, leaf_vector) -> list[str]:
     return children
 
 
-def get_mother_node(leaves) -> str:
+def get_mother_node(leaf_vectors) -> str:
     """
-    Given a list of leaf nodes, return the mother node of the leaves.
+    Given a list of leaf nodes, return the representative mother node.
     """
     mother_node = ''
-    for i in range(len(leaves[0])):
-        if all(leaf[i] == leaves[0][i] for leaf in leaves):
-            mother_node += leaves[0][i]
+    for i in range(len(leaf_vectors[0])):
+        if all(leaf[i] == leaf_vectors[0][i] for leaf in leaf_vectors):
+            mother_node += leaf_vectors[0][i]
         else:
             break
 
@@ -75,6 +75,34 @@ def global_min_cut(G):
             min_t_cut = minimum_cut(G, node, fixed_node,flow_func=edmonds_karp)
 
     return min_s_cut if min_s_cut[0] <= min_t_cut[0] else min_t_cut
+
+
+def collapse_graph(G, cut_vector):
+    """
+    Given a graph G and a cut, represented by its binary vector, return the collapsed graph.
+    """
+    # Separate the nodes into S and T
+    nodes = list(G.nodes)
+    S = []
+    T = []
+    for i in range(len(cut_vector)):
+        if cut_vector[i] == '0':
+            S.append(nodes[i])
+        elif cut_vector[i] == '1':
+            T.append(nodes[i])
+
+    # Collapse the nodes in S and T
+    G_collapse = G.copy()
+    if len(S) > 0:
+        G_collapse.add_node('S')
+    if len(T) > 0:
+        G_collapse.add_node('T')
+    for node in S:
+        G_collapse = nx.contracted_nodes(G_collapse, 'S', node, self_loops=False)
+    for node in T:
+        G_collapse = nx.contracted_nodes(G_collapse, 'T', node, self_loops=False)
+    
+    return G_collapse
 
 
 def varizani_yannakakis(G):
@@ -110,8 +138,8 @@ if __name__ == '__main__':
     G.add_edge(2, 3, capacity=10)
     G.add_edge(3, 2, capacity=10)
 
-    G.add_edge(3, 4, capacity=1)
-    G.add_edge(4, 3, capacity=1)
+    G.add_edge(2, 4, capacity=1)
+    G.add_edge(4, 2, capacity=1)
 
     G2 = nx.DiGraph()
     G2.add_edge(1, 2, capacity=1)
@@ -120,12 +148,14 @@ if __name__ == '__main__':
 
 
     cut = minimum_cut(G, 1, 4)
-    # print(varizani_yannakakis(G2))
+    #print(varizani_yannakakis(G2))
 
-    print(get_mother_node(["1011", "1010"]))
-    # print(format(0, '08b'))
+    #print(get_mother_node(["1011", "1010"]))
+    #print(format(0, '08b'))
+    G = collapse_graph(G, '0011')
+    nx.draw(G, with_labels=True, font_weight='bold')
+    edges = {edge: G[edge[0]][edge[1]]['capacity'] for edge in G.edges}
+    nx.draw_networkx_edge_labels(G, pos=nx.spring_layout(G), edge_labels=edges)
+    #nx.draw(G, with_labels=True, font_weight='bold')
 
-    #nx.draw(G_123, with_labels=True, font_weight='bold')
-    #nx.draw(G_0, with_labels=True, font_weight='bold')
-
-    #plt.show()
+    plt.show()
