@@ -18,5 +18,5 @@ def test_yannakakis():
 
     cuts = src.varizani_yannakakis(G)
 
-    assert len(cuts) == 3
+    assert len(cuts) == 8
     assert cuts[0] == ({1, 3}, {2})

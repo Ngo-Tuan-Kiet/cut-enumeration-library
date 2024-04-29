@@ -11,6 +11,7 @@ class Cut:
     def __init__(self, value, data):
         self.value = value
         self.partition = data['partition']
+        self.partition_vector = data['partition_vector']
         self.mother = data['mother']
         self.leaf_set = data['leaf_set']
 
@@ -64,16 +65,18 @@ def global_min_cut(G):
     nodes = list(G.nodes)
     # Temporary fix for the case where the graph has only 1 node
     if len(nodes) == 1:
-        return (0, (set(nodes), set()))
+        return (math.inf, (set(nodes), set()))
     fixed_node = nodes[0]
     min_s_cut = (math.inf, ())
     min_t_cut = (math.inf, ())
 
     for node in nodes[1:]:
-        if min_s_cut[0] > minimum_cut(G, fixed_node, node, flow_func=edmonds_karp)[0]:
-            min_s_cut = minimum_cut(G, fixed_node, node,flow_func=edmonds_karp)
-        if min_t_cut[0] > minimum_cut(G, fixed_node, node,flow_func=edmonds_karp)[0]:
-            min_t_cut = minimum_cut(G, node, fixed_node,flow_func=edmonds_karp)
+        if fixed_node != 'T' and node != 'S':
+            if min_s_cut[0] > minimum_cut(G, fixed_node, node, flow_func=edmonds_karp)[0]:
+                min_s_cut = minimum_cut(G, fixed_node, node,flow_func=edmonds_karp)
+        if fixed_node != 'S' and node != 'T':
+            if min_t_cut[0] > minimum_cut(G, node, fixed_node,flow_func=edmonds_karp)[0]:
+                min_t_cut = minimum_cut(G, node, fixed_node,flow_func=edmonds_karp)
 
     return min_s_cut if min_s_cut[0] <= min_t_cut[0] else min_t_cut
 
@@ -105,7 +108,7 @@ def collapse_graph(G, cut_vector):
 
     # Set capacities to 0 for edges connected to S or T
     for edge in G_collapse.edges:
-        if edge[0] or edge[1] in ['S', 'T']:
+        if edge[0] == 'S' or edge[1] == 'S' or edge[0] == 'T' or edge[1] == 'T':
             G_collapse[edge[0]][edge[1]]['capacity'] = 0
 
     # Sum the capacities of the edges coming out of S and T
@@ -113,12 +116,14 @@ def collapse_graph(G, cut_vector):
         for neighbor in G.neighbors(node):
             if neighbor not in S and neighbor not in T:
                 G_collapse['S'][neighbor]['capacity'] += G[node][neighbor]['capacity']
+                G_collapse[neighbor]['S']['capacity'] += G[node][neighbor]['capacity']
             if neighbor in T:
                 G_collapse['S']['T']['capacity'] += G[node][neighbor]['capacity']
     for node in T:
         for neighbor in G.neighbors(node):
             if neighbor not in T and neighbor not in S:
                 G_collapse['T'][neighbor]['capacity'] += G[node][neighbor]['capacity']
+                G_collapse[neighbor]['T']['capacity'] += G[node][neighbor]['capacity']
             if neighbor in S:
                 G_collapse['T']['S']['capacity'] += G[node][neighbor]['capacity']
     
@@ -157,9 +162,9 @@ def varizani_yannakakis(G):
     min_cut_vector = cut_to_vector(G, min_cut_partition)
     leaf_set = get_all_leaf_vectors(G.number_of_nodes())
     
-    # Initialize priority queue with the min cut value, it's node partition, all possible leaf vectors and the mother vector
+    # Initialize priority queue with the min cut value, it's node partition, the mother vector and all possible leaf vectors
     queue = PriorityQueue()
-    queue.put(Cut(min_cut_value, {'partition': min_cut_vector, 'mother': '', 'leaf_set': leaf_set}))
+    queue.put(Cut(min_cut_value, {'partition': min_cut_partition, 'partition_vector': min_cut_vector, 'mother': '', 'leaf_set': leaf_set}))
 
     while not queue.empty():
 
@@ -167,10 +172,10 @@ def varizani_yannakakis(G):
         current_cut = queue.get()
 
         # Add the current cut to the list of enumerated cuts
-        enumerated_cuts.append((current_cut.value, current_cut.partition))
+        enumerated_cuts.append(current_cut.partition)
 
         # Get the immediate children of the current cut
-        immediate_children = get_immediate_children(current_cut.mother, current_cut.partition)
+        immediate_children = get_immediate_children(current_cut.mother, current_cut.partition_vector)
 
         for child_vector in immediate_children:
             # Calculate the min cut for the child and get the necessary data
@@ -180,7 +185,7 @@ def varizani_yannakakis(G):
             child_leaf_set = get_all_leaf_vectors(G.number_of_nodes(), child_vector)
 
             # Add the min cut of the child to the queue
-            queue.put(Cut(child_min_value, {'partition': child_min_vector, 'mother': child_vector, 'leaf_set': child_leaf_set}))
+            queue.put(Cut(child_min_value, {'partition': child_min_partition, 'partition_vector': child_min_vector, 'mother': child_vector, 'leaf_set': child_leaf_set}))
 
     # Return the list of enumerated cuts
     return enumerated_cuts
@@ -204,11 +209,9 @@ if __name__ == '__main__':
 
     print(varizani_yannakakis(G))
 
-    # print(format(0, '08b'))
-    # G = collapse_graph(G, '1100')
+    # G = collapse_graph(G, '001')
     # pos = nx.spring_layout(G)
     # edges = {edge: G[edge[0]][edge[1]]['capacity'] for edge in G.edges}
     # nx.draw(G, pos, with_labels=True)
     # nx.draw_networkx_edge_labels(G, pos, edge_labels=edges)
-
     # plt.show()
