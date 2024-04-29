@@ -6,6 +6,18 @@ import math
 from queue import PriorityQueue
 
 
+# Wrapper class for the cut data to be used in the priority queue
+class Cut:
+    def __init__(self, value, data):
+        self.value = value
+        self.partition = data['partition']
+        self.mother = data['mother']
+        self.leaf_set = data['leaf_set']
+
+    def __lt__(self, other):
+        return self.value < other.value
+
+
 def cut_to_vector(G, cut):
     """
     Given a graph G and a cut, return the vector representation of the cut.
@@ -45,25 +57,14 @@ def get_immediate_children(internal_vector, leaf_vector) -> list[str]:
     return children
 
 
-def get_mother_node(leaf_vectors) -> str:
-    """
-    Given a list of leaf nodes, return the representative mother node.
-    """
-    mother_node = ''
-    for i in range(len(leaf_vectors[0])):
-        if all(leaf[i] == leaf_vectors[0][i] for leaf in leaf_vectors):
-            mother_node += leaf_vectors[0][i]
-        else:
-            break
-
-    return mother_node
-
-
 def global_min_cut(G):
     """
     Given a graph G, return the global min cut of the graph.
     """
     nodes = list(G.nodes)
+    # Temporary fix for the case where the graph has only 1 node
+    if len(nodes) == 1:
+        return (0, (set(nodes), set()))
     fixed_node = nodes[0]
     min_s_cut = (math.inf, ())
     min_t_cut = (math.inf, ())
@@ -124,30 +125,65 @@ def collapse_graph(G, cut_vector):
     return G_collapse
 
 
+def get_original_partition(partition, cut_vector):
+    """
+    Given a partition of nodes including S and T nodes and the cut vector used to collapse, return the original partition of nodes.
+    """
+    original_partition = partition
+    # Go through the cut vector and assign each node to its original side
+    for i in range(len(cut_vector)):
+        if cut_vector[i] == '0':
+            original_partition[0].add(i+1)
+        elif cut_vector[i] == '1':
+            original_partition[1].add(i+1)
+    
+    # Remove the S and T nodes from the partition
+    for side in original_partition:
+        if 'S' in side:
+            side.remove('S')
+        if 'T' in side:
+            side.remove('T')
+    return original_partition
+
+
 def varizani_yannakakis(G):
     """
     Varizani-Yannakakis algorithm for enumerating all min-cuts of a graph G.
     """
     enumerated_cuts = []
-    # Tuple of min cut value and partion of nodes
-    min_cut_value, min_cut_partition = global_min_cut(G)
 
+    # Calculate the global min cut of the graph and get necessary data
+    min_cut_value, min_cut_partition = global_min_cut(G)
     min_cut_vector = cut_to_vector(G, min_cut_partition)
+    leaf_set = get_all_leaf_vectors(G.number_of_nodes())
     
-    # Initialize priority queue with the min cut value and all possible vectors
+    # Initialize priority queue with the min cut value, it's node partition, all possible leaf vectors and the mother vector
     queue = PriorityQueue()
-    queue.put((min_cut_value, get_all_leaf_vectors(len(G.nodes))))
+    queue.put(Cut(min_cut_value, {'partition': min_cut_vector, 'mother': '', 'leaf_set': leaf_set}))
 
     while not queue.empty():
-        current_cut = queue.get()
-        enumerated_cuts.append(current_cut)
-        immediate_children = get_immediate_children(get_mother_node(current_cut[1]), min_cut_vector)
-        for child in immediate_children:
-            child_value, child_partition = global_min_cut(collapse_graph(G, child))
-            print(child_partition)
-            queue.put((child_value, child_partition))
 
-    return min_cut_vector
+        # Get the current cut with the smallest value
+        current_cut = queue.get()
+
+        # Add the current cut to the list of enumerated cuts
+        enumerated_cuts.append((current_cut.value, current_cut.partition))
+
+        # Get the immediate children of the current cut
+        immediate_children = get_immediate_children(current_cut.mother, current_cut.partition)
+
+        for child_vector in immediate_children:
+            # Calculate the min cut for the child and get the necessary data
+            child_min_value, child_min_partition = global_min_cut(collapse_graph(G, child_vector))
+            child_min_partition = get_original_partition(child_min_partition, child_vector)
+            child_min_vector = cut_to_vector(G, child_min_partition)
+            child_leaf_set = get_all_leaf_vectors(G.number_of_nodes(), child_vector)
+
+            # Add the min cut of the child to the queue
+            queue.put(Cut(child_min_value, {'partition': child_min_vector, 'mother': child_vector, 'leaf_set': child_leaf_set}))
+
+    # Return the list of enumerated cuts
+    return enumerated_cuts
 
 
 if __name__ == '__main__':
@@ -166,11 +202,8 @@ if __name__ == '__main__':
     G2.add_edge(2, 3, capacity=2)
     G2.add_edge(3, 1, capacity=3)
 
-
-    # cut = minimum_cut(G, 1, 4)
     print(varizani_yannakakis(G))
 
-    # print(get_mother_node(["1011", "1010"]))
     # print(format(0, '08b'))
     # G = collapse_graph(G, '1100')
     # pos = nx.spring_layout(G)
