@@ -58,6 +58,34 @@ def get_immediate_children(internal_vector: str, leaf_vector: str) -> list[str]:
     return children
 
 
+def minimum_s_cut(G: nx.DiGraph, fixed_s) -> tuple[int | float, tuple[set, set]]:
+    """
+    Given a graph G and a fixed source node, return the min cut of the graph with the fixed node.
+    """
+    nodes = list(G.nodes)
+    nodes.remove(fixed_s)
+    min_cut = (math.inf, ())
+    for node in nodes:
+        if node != fixed_s:
+            if min_cut[0] > minimum_cut(G, fixed_s, node, flow_func=edmonds_karp)[0]:
+                min_cut = minimum_cut(G, fixed_s, node, flow_func=edmonds_karp)
+    return min_cut
+
+
+def minimum_t_cut(G: nx.DiGraph, fixed_t) -> tuple[int | float, tuple[set, set]]:
+    """
+    Given a graph G and a fixed sink node, return the min cut of the graph with the fixed node.
+    """
+    nodes = list(G.nodes)
+    nodes.remove(fixed_t)
+    min_cut = (math.inf, ())
+    for node in nodes:
+        if node != fixed_t:
+            if min_cut[0] > minimum_cut(G, node, fixed_t, flow_func=edmonds_karp)[0]:
+                min_cut = minimum_cut(G, node, fixed_t, flow_func=edmonds_karp)
+    return min_cut
+
+
 def global_min_cut(G: nx.DiGraph) -> tuple[int | float, tuple[set, set]]:
     """
     Given a graph G, return the global min cut of the graph.
@@ -67,16 +95,8 @@ def global_min_cut(G: nx.DiGraph) -> tuple[int | float, tuple[set, set]]:
     if len(nodes) == 1:
         return (math.inf, (set(nodes), set()))
     fixed_node = nodes[0]
-    min_s_cut = (math.inf, ())
-    min_t_cut = (math.inf, ())
-
-    for node in nodes[1:]:
-        if fixed_node != 'T' and node != 'S':
-            if min_s_cut[0] > minimum_cut(G, fixed_node, node, flow_func=edmonds_karp)[0]:
-                min_s_cut = minimum_cut(G, fixed_node, node,flow_func=edmonds_karp)
-        if fixed_node != 'S' and node != 'T':
-            if min_t_cut[0] > minimum_cut(G, node, fixed_node,flow_func=edmonds_karp)[0]:
-                min_t_cut = minimum_cut(G, node, fixed_node,flow_func=edmonds_karp)
+    min_s_cut = minimum_s_cut(G, fixed_node)
+    min_t_cut = minimum_t_cut(G, fixed_node)
 
     return min_s_cut if min_s_cut[0] <= min_t_cut[0] else min_t_cut
 
@@ -94,23 +114,13 @@ def partly_specified_min_cut(G: nx.DiGraph) -> tuple[int | float, tuple[set, set
     # Temporary fix for the case where the graph has only 1 node
     if len(nodes) == 1:
         return (math.inf, (set(nodes), set()))
-    min_s_cut = (math.inf, ())
-    min_t_cut = (math.inf, ())
-
+    
     if 'S' in nodes and 'T' in nodes:
         return minimum_cut(G, 'S', 'T', flow_func=edmonds_karp)
     if 'S' in nodes:
-        nodes.remove('S')
-        for node in nodes:
-            if min_s_cut[0] > minimum_cut(G, 'S', node, flow_func=edmonds_karp)[0]:
-                min_s_cut = minimum_cut(G, 'S', node, flow_func=edmonds_karp)
-        return min_s_cut
+        return minimum_s_cut(G, 'S')
     if 'T' in nodes:
-        nodes.remove('T')
-        for node in nodes:
-            if min_t_cut[0] > minimum_cut(G, node, 'T', flow_func=edmonds_karp)[0]:
-                min_t_cut = minimum_cut(G, node, 'T', flow_func=edmonds_karp)
-        return min_t_cut
+        return minimum_t_cut(G, 'T')
 
 
 def collapse_graph(G: nx.DiGraph, cut_vector: str) -> nx.DiGraph:
