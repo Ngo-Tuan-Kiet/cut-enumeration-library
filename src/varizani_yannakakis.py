@@ -19,7 +19,7 @@ class Cut:
         return self.value < other.value
 
 
-def cut_to_vector(G, cut):
+def cut_to_vector(G: nx.DiGraph, cut):
     """
     Given a graph G and a cut, return the vector representation of the cut.
     """
@@ -58,7 +58,7 @@ def get_immediate_children(internal_vector, leaf_vector) -> list[str]:
     return children
 
 
-def global_min_cut(G):
+def global_min_cut(G: nx.DiGraph):
     """
     Given a graph G, return the global min cut of the graph.
     """
@@ -81,9 +81,9 @@ def global_min_cut(G):
     return min_s_cut if min_s_cut[0] <= min_t_cut[0] else min_t_cut
 
 
-def collapse_graph(G, cut_vector):
+def collapse_graph(G: nx.DiGraph, cut_vector):
     """
-    Given a graph G and a cut, represented by its binary vector, return the collapsed graph.
+    Given a directed graph G and a cut, represented by its binary vector, return the collapsed graph.
     """
     # Separate the nodes into sets S and T
     nodes = list(G.nodes)
@@ -151,7 +151,7 @@ def get_original_partition(partition, cut_vector):
     return original_partition
 
 
-def varizani_yannakakis(G):
+def varizani_yannakakis(G: nx.DiGraph):
     """
     Varizani-Yannakakis algorithm for enumerating all min-cuts of a graph G.
     """
@@ -169,17 +169,19 @@ def varizani_yannakakis(G):
     while not queue.empty():
 
         # Get the current cut with the smallest value
-        current_cut = queue.get()
+        current_cut: Cut = queue.get()
 
         # Add the current cut to the list of enumerated cuts
-        enumerated_cuts.append(current_cut.partition)
+        enumerated_cuts.append((current_cut.value, current_cut.partition))
 
         # Get the immediate children of the current cut
         immediate_children = get_immediate_children(current_cut.mother, current_cut.partition_vector)
 
         for child_vector in immediate_children:
+            # Collapse the graph based on the child vector
+            collapsed_graph = collapse_graph(G, child_vector)
             # Calculate the min cut for the child and get the necessary data
-            child_min_value, child_min_partition = global_min_cut(collapse_graph(G, child_vector))
+            child_min_value, child_min_partition = global_min_cut(collapsed_graph)
             child_min_partition = get_original_partition(child_min_partition, child_vector)
             child_min_vector = cut_to_vector(G, child_min_partition)
             child_leaf_set = get_all_leaf_vectors(G.number_of_nodes(), child_vector)

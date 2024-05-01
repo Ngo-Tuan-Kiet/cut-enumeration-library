@@ -1,6 +1,9 @@
 import networkx as nx
 import pytest
-from src import varizani_yannakakis # TODO: change to 'src.varizani_yannakakis import varizani_yannakakis' and the file name
+import sys
+sys.path.append("..") 
+
+from src.varizani_yannakakis import varizani_yannakakis, collapse_graph
 
 
 @pytest.fixture()
@@ -93,3 +96,29 @@ def test_yannakakis_single(directed_triangle):
 
     assert len(cuts) == 8
     assert cuts[0] == ({1, 3}, {2})
+
+
+def test_collapse_graph_directed_triangle(directed_triangle):
+    collapsed_graph = collapse_graph(directed_triangle, '001')
+
+    assert collapsed_graph.number_of_nodes() == 2
+    assert collapsed_graph.number_of_edges() == 2
+    assert collapsed_graph['S']['T']['capacity'] == 5
+
+
+def test_collapse_graph_undirected_triangle(undirected_triangle):
+    collapsed_graph = collapse_graph(undirected_triangle.to_directed(), '001')
+
+    assert collapsed_graph.number_of_nodes() == 2
+    assert collapsed_graph.number_of_edges() == 2
+    assert collapsed_graph['S']['T']['capacity'] == 5
+
+
+def test_collapse_graph_complex_graph(complex_graph):
+    collapsed_graph = collapse_graph(complex_graph.to_directed(), '110')
+
+    assert collapsed_graph.number_of_nodes() == 3
+    assert collapsed_graph.number_of_edges() == 6
+    assert collapsed_graph['S']['T']['capacity'] == 4
+    assert collapsed_graph['S'][4]['capacity'] == 2
+    assert collapsed_graph['T'][4]['capacity'] == 8
