@@ -71,10 +71,10 @@ def global_min_cut(G: nx.DiGraph):
     min_t_cut = (math.inf, ())
 
     for node in nodes[1:]:
-        #if fixed_node != 'T' and node != 'S':
+        if fixed_node != 'T' and node != 'S':
             if min_s_cut[0] > minimum_cut(G, fixed_node, node, flow_func=edmonds_karp)[0]:
                 min_s_cut = minimum_cut(G, fixed_node, node,flow_func=edmonds_karp)
-        #if fixed_node != 'S' and node != 'T':
+        if fixed_node != 'S' and node != 'T':
             if min_t_cut[0] > minimum_cut(G, node, fixed_node,flow_func=edmonds_karp)[0]:
                 min_t_cut = minimum_cut(G, node, fixed_node,flow_func=edmonds_karp)
 
@@ -119,87 +119,53 @@ def collapsed_G_min_cut(G_collapsed):
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 def collapse_graph(G: nx.DiGraph, cut_vector):
-
-    #separate nodes into T and S
+    """
+    Given a directed graph G and a cut, represented by its binary vector, return the collapsed graph.
+    """
+    # Separate the nodes into sets S and T
     nodes = list(G.nodes)
-    S = [nodes[i] for i in range(len(cut_vector)) if cut_vector[i] == '0']
-    T = [nodes[i] for i in range(len(cut_vector)) if cut_vector[i] == '1']
+    S = []
+    T = []
+    for i in range(len(cut_vector)):
+        if cut_vector[i] == '0':
+            S.append(nodes[i])
+        elif cut_vector[i] == '1':
+            T.append(nodes[i])
 
-    # Collapse the nodes in S and T into two super nodes 'S' and 'T'
+    # Collapse the nodes in S and T
     G_collapse = G.copy()
+    if len(S) > 0:
+        G_collapse.add_node('S')
+    if len(T) > 0: #was wenn wir das nicht haben? dann wird t einfach beliebig gewählt?
+        G_collapse.add_node('T')
     for node in S:
-        G_collapse = nx.contracted_nodes(G_collapse, 'S', node, self_loops=False)
+        G_collapse = nx.contracted_nodes(G_collapse, 'S', node, self_loops=False) #wie sind denn die capacities nach contracted_nodes? sicher dass er die nicht schon addiert?
     for node in T:
         G_collapse = nx.contracted_nodes(G_collapse, 'T', node, self_loops=False)
 
-    return G_collapse
+    # Set capacities to 0 for edges connected to S or T                       
+    for edge in G_collapse.edges:
+        if edge[0] == 'S' or edge[1] == 'S' or edge[0] == 'T' or edge[1] == 'T':
+            G_collapse[edge[0]][edge[1]]['capacity'] = 0
 
-
-
-
-
-# def collapse_graph(G: nx.DiGraph, cut_vector):
-#     """
-#     Given a directed graph G and a cut, represented by its binary vector, return the collapsed graph.
-#     """
-#     # Separate the nodes into sets S and T
-#     nodes = list(G.nodes)
-#     S = []
-#     T = []
-#     for i in range(len(cut_vector)):
-#         if cut_vector[i] == '0':
-#             S.append(nodes[i])
-#         elif cut_vector[i] == '1':
-#             T.append(nodes[i])
-
-#     # Collapse the nodes in S and T
-#     G_collapse = G.copy()
-#     if len(S) > 0:
-#         G_collapse.add_node('S')
-#     if len(T) > 0: #was wenn wir das nicht haben? dann wird t einfach beliebig gewählt?
-#         G_collapse.add_node('T')
-#     for node in S:
-#         G_collapse = nx.contracted_nodes(G_collapse, 'S', node, self_loops=False) #wie sind denn die capacities nach contracted_nodes? sicher dass er die nicht schon addiert?
-#     for node in T:
-#         G_collapse = nx.contracted_nodes(G_collapse, 'T', node, self_loops=False)
-
-#     # Set capacities to 0 for edges connected to S or T                       
-#     for edge in G_collapse.edges:
-#         if edge[0] == 'S' or edge[1] == 'S' or edge[0] == 'T' or edge[1] == 'T':
-#             G_collapse[edge[0]][edge[1]]['capacity'] = 0
-
-#     # Sum the capacities of the edges coming out of S and T
-#     for node in S:
-#         for neighbor in G.neighbors(node):
-#             if neighbor not in S and neighbor not in T:
-#                 G_collapse['S'][neighbor]['capacity'] += G[node][neighbor]['capacity']
-#                 G_collapse[neighbor]['S']['capacity'] += G[node][neighbor]['capacity']
-#             if neighbor in T:
-#                 G_collapse['S']['T']['capacity'] += G[node][neighbor]['capacity']
-#     for node in T:
-#         for neighbor in G.neighbors(node):
-#             if neighbor not in T and neighbor not in S:
-#                 G_collapse['T'][neighbor]['capacity'] += G[node][neighbor]['capacity']
-#                 G_collapse[neighbor]['T']['capacity'] += G[node][neighbor]['capacity']
-#             if neighbor in S:
-#                 G_collapse['T']['S']['capacity'] += G[node][neighbor]['capacity']
+    # Sum the capacities of the edges coming out of S and T
+    for node in S:
+        for neighbor in G.neighbors(node):
+            if neighbor not in S and neighbor not in T:
+                G_collapse['S'][neighbor]['capacity'] += G[node][neighbor]['capacity']
+                G_collapse[neighbor]['S']['capacity'] += G[node][neighbor]['capacity']
+            if neighbor in T:
+                G_collapse['S']['T']['capacity'] += G[node][neighbor]['capacity']
+    for node in T:
+        for neighbor in G.neighbors(node):
+            if neighbor not in T and neighbor not in S:
+                G_collapse['T'][neighbor]['capacity'] += G[node][neighbor]['capacity']
+                G_collapse[neighbor]['T']['capacity'] += G[node][neighbor]['capacity']
+            if neighbor in S:
+                G_collapse['T']['S']['capacity'] += G[node][neighbor]['capacity']
     
-#     return G_collapse
+    return G_collapse
 
 
 def get_original_partition(partition, cut_vector):
@@ -303,7 +269,7 @@ def print_graph_info(G):
         print(f"Edge from {u} to {v} with capacity {data['capacity']}")
 
 
-G_collapsed=collapse_graph(G, "00")
+G_collapsed=collapse_graph(G, "010")
 print(print_graph_info(G_collapsed))
 print(G_collapsed.nodes)
 print(collapsed_G_min_cut(G_collapsed))
