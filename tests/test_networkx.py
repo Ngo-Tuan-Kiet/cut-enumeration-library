@@ -1,9 +1,6 @@
 import networkx as nx
 import pytest
-import sys
 from math import inf
-sys.path.append("..") 
-
 from src.varizani_yannakakis import varizani_yannakakis, collapse_graph
 
 
