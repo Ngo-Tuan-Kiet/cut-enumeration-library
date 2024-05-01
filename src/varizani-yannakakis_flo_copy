@@ -71,10 +71,10 @@ def global_min_cut(G: nx.DiGraph):
     min_t_cut = (math.inf, ())
 
     for node in nodes[1:]:
-        if fixed_node != 'T' and node != 'S':
+        #if fixed_node != 'T' and node != 'S':
             if min_s_cut[0] > minimum_cut(G, fixed_node, node, flow_func=edmonds_karp)[0]:
                 min_s_cut = minimum_cut(G, fixed_node, node,flow_func=edmonds_karp)
-        if fixed_node != 'S' and node != 'T':
+        #if fixed_node != 'S' and node != 'T':
             if min_t_cut[0] > minimum_cut(G, node, fixed_node,flow_func=edmonds_karp)[0]:
                 min_t_cut = minimum_cut(G, node, fixed_node,flow_func=edmonds_karp)
 
