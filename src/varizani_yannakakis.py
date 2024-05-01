@@ -81,6 +81,38 @@ def global_min_cut(G: nx.DiGraph):
     return min_s_cut if min_s_cut[0] <= min_t_cut[0] else min_t_cut
 
 
+def partly_specified_min_cut(G: nx.DiGraph):
+    """
+    Given a collapsed graph G (at least one node is specified as S or T because of the 'collapse_graph()' method), 
+    return the min cut of the collapsed graph with the specified cut.
+    """
+    nodes = list(G.nodes)
+
+    if 'S' not in nodes and 'T' not in nodes:
+        raise ValueError('No node is specified as S or T. Graphs must be collapsed before using this function.')
+
+    # Temporary fix for the case where the graph has only 1 node
+    if len(nodes) == 1:
+        return (math.inf, (set(nodes), set()))
+    min_s_cut = (math.inf, ())
+    min_t_cut = (math.inf, ())
+
+    if 'S' in nodes and 'T' in nodes:
+        return minimum_cut(G, 'S', 'T', flow_func=edmonds_karp)
+    if 'S' in nodes:
+        nodes.remove('S')
+        for node in nodes:
+            if min_s_cut[0] > minimum_cut(G, 'S', node, flow_func=edmonds_karp)[0]:
+                min_s_cut = minimum_cut(G, 'S', node, flow_func=edmonds_karp)
+        return min_s_cut
+    if 'T' in nodes:
+        nodes.remove('T')
+        for node in nodes:
+            if min_t_cut[0] > minimum_cut(G, node, 'T', flow_func=edmonds_karp)[0]:
+                min_t_cut = minimum_cut(G, node, 'T', flow_func=edmonds_karp)
+        return min_t_cut
+
+
 def collapse_graph(G: nx.DiGraph, cut_vector):
     """
     Given a directed graph G and a cut, represented by its binary vector, return the collapsed graph.
@@ -181,7 +213,7 @@ def varizani_yannakakis(G: nx.DiGraph):
             # Collapse the graph based on the child vector
             collapsed_graph = collapse_graph(G, child_vector)
             # Calculate the min cut for the child and get the necessary data
-            child_min_value, child_min_partition = global_min_cut(collapsed_graph)
+            child_min_value, child_min_partition = partly_specified_min_cut(collapsed_graph)
             child_min_partition = get_original_partition(child_min_partition, child_vector)
             child_min_vector = cut_to_vector(G, child_min_partition)
             child_leaf_set = get_all_leaf_vectors(G.number_of_nodes(), child_vector)
