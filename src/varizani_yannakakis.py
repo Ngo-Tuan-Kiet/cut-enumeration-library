@@ -19,9 +19,9 @@ class Cut:
         return self.value < other.value
 
 
-def cut_to_vector(G: nx.DiGraph, cut):
+def cut_to_vector(G: nx.DiGraph, cut: tuple[int | float, tuple[set, set]]) -> str:
     """
-    Given a graph G and a cut, return the vector representation of the cut.
+    Given a graph G and a cut, return the vector representation of the cut as string.
     """
     vector = ''
     for node in G.nodes:
@@ -35,14 +35,14 @@ def cut_to_vector(G: nx.DiGraph, cut):
     return vector
 
 
-def get_all_leaf_vectors(n, internal_vector='') -> list[str]:
+def get_all_leaf_vectors(n: int, internal_vector='') -> list[str]:
     """
     Given an integer n and an optional internal node vector, return all possible leaf vectors of length n.
     """
     return [internal_vector + ''.join(seq) for seq in itertools.product("01", repeat=n - len(internal_vector))]
 
 
-def get_immediate_children(internal_vector, leaf_vector) -> list[str]:
+def get_immediate_children(internal_vector: str, leaf_vector: str) -> list[str]:
     """
     Given the vector of an internal node and a leaf node, return the immediate children of the path from internal node to leaf node.
     """
@@ -58,7 +58,7 @@ def get_immediate_children(internal_vector, leaf_vector) -> list[str]:
     return children
 
 
-def global_min_cut(G: nx.DiGraph):
+def global_min_cut(G: nx.DiGraph) -> tuple[int | float, tuple[set, set]]:
     """
     Given a graph G, return the global min cut of the graph.
     """
@@ -81,7 +81,7 @@ def global_min_cut(G: nx.DiGraph):
     return min_s_cut if min_s_cut[0] <= min_t_cut[0] else min_t_cut
 
 
-def partly_specified_min_cut(G: nx.DiGraph):
+def partly_specified_min_cut(G: nx.DiGraph) -> tuple[int | float, tuple[set, set]]:
     """
     Given a collapsed graph G (at least one node is specified as S or T because of the 'collapse_graph()' method), 
     return the min cut of the collapsed graph with the specified cut.
@@ -113,10 +113,13 @@ def partly_specified_min_cut(G: nx.DiGraph):
         return min_t_cut
 
 
-def collapse_graph(G: nx.DiGraph, cut_vector):
+def collapse_graph(G: nx.DiGraph, cut_vector: str) -> nx.DiGraph:
     """
     Given a directed graph G and a cut, represented by its binary vector, return the collapsed graph.
     """
+    if G.is_directed() is False:
+        raise ValueError('The graph must be directed to use this function.')
+
     # Separate the nodes into sets S and T
     nodes = list(G.nodes)
     S = []
@@ -162,7 +165,7 @@ def collapse_graph(G: nx.DiGraph, cut_vector):
     return G_collapse
 
 
-def get_original_partition(partition, cut_vector):
+def get_original_partition(partition: tuple[set, set], cut_vector: str) -> tuple[set, set]:
     """
     Given a partition of nodes including S and T nodes and the cut vector used to collapse, return the original partition of nodes.
     """
@@ -183,12 +186,11 @@ def get_original_partition(partition, cut_vector):
     return original_partition
 
 
-def varizani_yannakakis(G: nx.DiGraph):
+def varizani_yannakakis_directed(G: nx.DiGraph) -> list[tuple[int | float, tuple[set, set]]]:
     """
     Varizani-Yannakakis algorithm for enumerating all min-cuts of a graph G.
     """
     enumerated_cuts = []
-
     # Calculate the global min cut of the graph and get necessary data
     min_cut_value, min_cut_partition = global_min_cut(G)
     min_cut_vector = cut_to_vector(G, min_cut_partition)
@@ -223,6 +225,13 @@ def varizani_yannakakis(G: nx.DiGraph):
 
     # Return the list of enumerated cuts
     return enumerated_cuts
+
+
+def varizani_yannakakis(G: nx.DiGraph | nx.Graph) -> list[tuple[int | float, tuple[set, set]]]:
+    """
+    Wrapper function for the Varizani-Yannakakis algorithm that works with directed and undirected graphs.
+    """
+    return varizani_yannakakis_directed(G) if G.is_directed() else varizani_yannakakis_directed(G.to_directed())
 
 
 if __name__ == '__main__':

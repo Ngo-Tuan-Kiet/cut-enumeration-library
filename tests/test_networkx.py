@@ -41,7 +41,7 @@ def single_edge_graph():
 
 @pytest.fixture()
 def single_node_graph():
-    G = nx.Graph()
+    G = nx.DiGraph()
     G.add_node(1)
     return G
 
@@ -85,7 +85,6 @@ def star_graph():
     G.add_edge(4, 2, capacity=1)
     return G
 
-# TODO: test the function varizani_yannakakis with the following test cases (cuts have to be calculated manually)
 @pytest.mark.parametrize('graph, min_cut', [
                         #(directed_triangle, ({1, 3}, {2})), 
                         ('undirected_triangle', (3, ({1, 3}, {2}))), 
@@ -102,6 +101,7 @@ def test_yannakakis_best_cut(request, graph, min_cut):
     cuts = varizani_yannakakis(request.getfixturevalue(graph))
     assert cuts[0] == min_cut
 
+# TODO: Test has to be rewritten, so that order of cuts with equal value is not important (see last case)
 @pytest.mark.parametrize('graph, second_min_cut', [
                         #(directed_triangle, ({1, 3}, {2})), 
                         ('undirected_triangle', (4, ({1}, {2, 3}))), 
@@ -111,15 +111,16 @@ def test_yannakakis_best_cut(request, graph, min_cut):
                         #(disconnected_graph, 2), # TODO: raise an exception?
                         #(unreachable_graph, 0), # TODO: raise an exception?
                         ('complex_graph', (6, ({1, 2, 4}, {3}))),
-                        ('star_graph', (10, ({1}, {2, 3, 4})))
+                        ('star_graph', (10, ({1}, {2, 3, 4}))),
+                        ('star_graph', (10, ({1, 2, 4}, {3})))
                         ])
 def test_yannakakis_second_best_cut(request, graph, second_min_cut):
-    cuts = varizani_yannakakis(request.getfixturevalue(graph).to_directed())
+    cuts = varizani_yannakakis(request.getfixturevalue(graph))
     assert cuts[2] == second_min_cut
 
 
 def test_yannakakis_single_node(single_node_graph):
-    cuts = varizani_yannakakis(single_node_graph.to_directed())
+    cuts = varizani_yannakakis(single_node_graph)
     with pytest.raises(IndexError):
         cuts[2]
 
