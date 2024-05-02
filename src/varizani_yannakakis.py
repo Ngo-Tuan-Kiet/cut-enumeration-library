@@ -125,19 +125,19 @@ def partly_specified_min_cut(G: nx.DiGraph) -> tuple[int | float, tuple[set, set
 
 def contract_nodes_with_edge_addition(G: nx.DiGraph, u: int | str, v: int | str, self_loops=True, copy=True) -> nx.DiGraph:
     """
-    Given a directed graph G and two nodes u and v, contract the nodes u and v and add the edges between them to the new node. (This function applies contracted_notes() from networkx with some custom logic, adding up all the edges to shared neighbors of nodes u and v.)
+    Given a directed graph G and two nodes u and v, contract the nodes u and v and add up the edges to shared neighbors. (This function applies contracted_notes() from networkx with some custom logic, adding up all the edges to shared neighbors of u and v.)
     """
     G_collapsed = G.copy()
 
-    # Check if u and v have a shared neighbor in G_collapsed
+    # Check if u and v have shared neighbors in G_collapsed
     shared_neighbors = set(G_collapsed[u]) & set(G_collapsed[v])
 
-    # Add the capacity of the edge from v to its shared neighbors to the edge from u to the shared neighbors
+    # Add the capacities of the edges of v to and from the shared neighbors to the edges of u to and from the shared neighbors
     for neighbor in shared_neighbors:
         G_collapsed[u][neighbor]['capacity'] += G_collapsed[v][neighbor]['capacity']
         G_collapsed[neighbor][u]['capacity'] += G_collapsed[neighbor][v]['capacity']
 
-    # Contract the nodes, granting u all edges of v to none-shared neighbors
+    # Contract the nodes, granting u all edges of v to and from non-shared neighbors
     G_collapsed = nx.contracted_nodes(G_collapsed, u, v, self_loops=self_loops, copy=copy)
 
     return G_collapsed
