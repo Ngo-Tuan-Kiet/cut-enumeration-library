@@ -93,12 +93,14 @@ def global_min_cut(G: nx.DiGraph) -> tuple[int | float, tuple[set, set]]:
     return min_s_cut if min_s_cut[0] <= min_t_cut[0] else min_t_cut
 
 
-def partly_specified_min_cut(G: nx.DiGraph) -> tuple[int | float, tuple[set, set]]:
+def partly_specified_min_cut(G: nx.DiGraph, child_vector: str) -> tuple[int | float, tuple[set, set]]:
     """
     Given a collapsed graph G (at least one node is specified as S or T because of the 'collapse_graph()' method), 
     return the min cut of the collapsed graph with the specified cut.
     """
-    nodes = list(G.nodes)
+    # Collapse the graph based on the child vector
+    collapsed_graph = collapse_graph(G, child_vector)
+    nodes = list(collapsed_graph.nodes)
 
     if 'S' not in nodes and 'T' not in nodes:
         raise ValueError('No node is specified as S or T. Graphs must be collapsed before using this function.')
@@ -108,11 +110,11 @@ def partly_specified_min_cut(G: nx.DiGraph) -> tuple[int | float, tuple[set, set
         return (math.inf, (set(nodes), set()))
     
     if 'S' in nodes and 'T' in nodes:
-        return minimum_cut(G, 'S', 'T', flow_func=edmonds_karp)
+        return minimum_cut(collapsed_graph, 'S', 'T', flow_func=edmonds_karp)
     if 'S' in nodes:
-        return minimum_s_cut(G, 'S')
+        return minimum_s_cut(collapsed_graph, 'S')
     if 'T' in nodes:
-        return minimum_t_cut(G, 'T')
+        return minimum_t_cut(collapsed_graph, 'T')
 
 
 def contract_nodes_with_edge_addition(G: nx.DiGraph, u: int | str, v: int | str, self_loops=True, copy=True) -> nx.DiGraph:
@@ -221,10 +223,8 @@ def varizani_yannakakis_directed(G: nx.DiGraph) -> list[tuple[int | float, tuple
         immediate_children = get_immediate_children(current_cut.mother, current_cut.partition_vector)
 
         for child_vector in immediate_children:
-            # Collapse the graph based on the child vector
-            collapsed_graph = collapse_graph(G, child_vector)
             # Calculate the min cut for the child and get the necessary data
-            child_min_value, child_min_partition = partly_specified_min_cut(collapsed_graph)
+            child_min_value, child_min_partition = partly_specified_min_cut(G, child_vector)
             child_min_partition = get_original_partition(G, child_min_partition, child_vector)
             child_min_vector = cut_to_vector(G, child_min_partition)
 
