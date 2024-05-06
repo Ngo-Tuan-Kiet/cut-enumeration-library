@@ -31,11 +31,28 @@ def test_yannakakis_best_cut(request, graph, min_cut):
                         #(unreachable_graph, 0), # TODO: raise an exception?
                         ('complex_graph', (6, ({1, 2, 4}, {3}))),
                         ('star_graph', (10, ({1}, {2, 3, 4}))),
-                        ('star_graph', (10, ({1, 2, 4}, {3})))
+                        #('star_graph', (10, ({1, 2, 4}, {3})))
                         ])
 def test_yannakakis_second_best_cut(request, graph, second_min_cut):
     cuts = varizani_yannakakis(request.getfixturevalue(graph))
     assert cuts[2] == second_min_cut
+
+
+@pytest.mark.parametrize('graph', ['undirected_triangle', 'single_edge_graph', 'single_node_graph', 'complex_graph', 'star_graph'])
+def test_yannakakis_non_decreasing_order(request, graph):
+    cuts = varizani_yannakakis(request.getfixturevalue(graph))
+    values = [cut[0] for cut in cuts]
+    assert values == sorted(values)
+
+
+# TODO: Test has to be inserted, if we know how to deal witth duplicate partitions
+'''
+@pytest.mark.parametrize('graph', ['undirected_triangle', 'single_edge_graph', 'single_node_graph', 'complex_graph', 'star_graph'])
+def test_yannakakis_no_duplicated_partitions(request, graph):
+    cuts = varizani_yannakakis(request.getfixturevalue(graph))
+    partitions = [frozenset(frozenset(part) for part in cut[1]) for cut in cuts] # frozenset because set is not hashable
+    assert len(partitions) == len(set(partitions))
+'''
 
 
 def test_yannakakis_single_node(single_node_graph):
