@@ -199,7 +199,7 @@ def varizani_yannakakis_directed(G: nx.DiGraph) -> list[tuple[int | float, tuple
     """
     Varizani-Yannakakis algorithm for enumerating all min-cuts of a graph G.
     """
-    # enumerated_cuts = []
+    enumerated_cuts = []
     # Calculate the global min cut of the graph and get necessary data
     min_cut_value, min_cut_partition = global_min_cut(G)
     min_cut_vector = cut_to_vector(G, min_cut_partition)
@@ -214,7 +214,7 @@ def varizani_yannakakis_directed(G: nx.DiGraph) -> list[tuple[int | float, tuple
         current_cut: Cut = queue.get()
 
         # Add the current cut to the list of enumerated cuts
-        # enumerated_cuts.append((current_cut.value, current_cut.partition))
+        enumerated_cuts.append((current_cut.value, current_cut.partition))
         print(current_cut.value, current_cut.partition_vector)
 
         # Get the immediate children of the current cut
@@ -232,7 +232,7 @@ def varizani_yannakakis_directed(G: nx.DiGraph) -> list[tuple[int | float, tuple
             queue.put(Cut(child_min_value, {'partition': child_min_partition, 'partition_vector': child_min_vector, 'mother': child_vector}))
 
     # Return the list of enumerated cuts
-    # return enumerated_cuts
+    return enumerated_cuts
 
 
 def varizani_yannakakis(G: nx.DiGraph | nx.Graph) -> list[tuple[int | float, tuple[set, set]]]:
