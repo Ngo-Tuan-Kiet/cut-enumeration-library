@@ -217,7 +217,7 @@ def varizani_yannakakis_directed(G: nx.DiGraph) -> list[tuple[int | float, tuple
 
         # Add the current cut to the list of enumerated cuts
         enumerated_cuts.append((current_cut.value, current_cut.partition))
-        print(current_cut.value, current_cut.partition_vector)
+        # print(current_cut.value, current_cut.partition_vector)
 
         # Get the immediate children of the current cut
         immediate_children = get_immediate_children(current_cut.mother, current_cut.partition_vector)
@@ -265,7 +265,7 @@ if __name__ == '__main__':
         G[edge[0]][edge[1]]['capacity'] = G[edge[0]][edge[1]]['order']
         del G[edge[0]][edge[1]]['order']
 
-    print(varizani_yannakakis(G))
+    # print(varizani_yannakakis(G))
 
     # G = collapse_graph(G, '001')
     # pos = nx.spring_layout(G)

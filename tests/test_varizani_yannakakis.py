@@ -2,6 +2,7 @@ import networkx as nx
 import pytest
 from math import inf
 from src.varizani_yannakakis import varizani_yannakakis, collapse_graph
+from src.cut_bases import cut_partition_to_edge_partition
 
 
 @pytest.mark.parametrize('graph, min_cut', [
@@ -92,3 +93,21 @@ def test_collapse_graph_complex_graph(complex_graph):
     assert collapsed_graph['S']['T']['capacity'] == 4
     assert collapsed_graph['S'][4]['capacity'] == 2
     assert collapsed_graph['T'][4]['capacity'] == 8
+
+
+@pytest.mark.parametrize('graph, edge_cut', [
+                        #(directed_triangle, ({1, 3}, {2})), 
+                        ('undirected_triangle', {(1, 2), (2, 3)}), 
+                        #(undirected_triangle_with_negative_capacity, ({1, 3}, {2})), # TODO: raise an exception
+                        # ('single_edge_graph', (inf, ({1, 2}, set()))), # TODO: not a Tuple of sets but a set of sets because of order
+                        #(empty_graph, 0), # TODO: raise an exception
+                        #(disconnected_graph, 2), # TODO: raise an exception?
+                        #(unreachable_graph, 0), # TODO: raise an exception?
+                        ('complex_graph', {(1, 2), (2, 4), (3, 4)}),
+                        ('star_graph', {(2,4)}),
+                        #('star_graph', (10, ({1, 2, 4}, {3})))
+                        ])
+def test_cut_partition_to_edge_partition(request, graph, edge_cut):
+    cuts = varizani_yannakakis(request.getfixturevalue(graph))
+    min_edge_cut = cut_partition_to_edge_partition(request.getfixturevalue(graph), cuts[0][1])
+    assert min_edge_cut == edge_cut

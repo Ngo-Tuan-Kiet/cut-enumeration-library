@@ -71,11 +71,8 @@ def complex_graph():
 
 @pytest.fixture()
 def star_graph():
-    G = nx.DiGraph()
+    G = nx.Graph()
     G.add_edge(1, 2, capacity=10)
-    G.add_edge(2, 1, capacity=10)
     G.add_edge(2, 3, capacity=10)
-    G.add_edge(3, 2, capacity=10)
     G.add_edge(2, 4, capacity=1)
-    G.add_edge(4, 2, capacity=1)
     return G
