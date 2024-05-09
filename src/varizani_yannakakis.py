@@ -1,24 +1,28 @@
-import itertools
 import networkx as nx
 from networkx.algorithms.flow import edmonds_karp, minimum_cut
-import matplotlib.pyplot as plt
 import math
 from queue import PriorityQueue
+from typing import Tuple, Union
 
+
+# Type definitions congruent with output of min_cut method in networkx (tuple of mi-cut value and ST-partition)
+type NodeSet = set
+type Cut_value = Union[int, float]
+type ST_partition = Tuple[NodeSet, NodeSet]
 
 # Wrapper class for the cut data to be used in the priority queue
 class Cut:
     def __init__(self, value, data):
-        self.value = value
-        self.partition = data['partition']
-        self.partition_vector = data['partition_vector']
-        self.mother = data['mother']
+        self.value: Cut_value = value
+        self.st_partition: ST_partition = data['st_partition']
+        self.partition_vector: str = data['partition_vector']
+        self.mother: str = data['mother']
 
     def __lt__(self, other):
         return self.value < other.value
 
 
-def cut_to_vector(G: nx.DiGraph, cut: tuple[int | float, tuple[set, set]]) -> str:
+def cut_to_vector(G: nx.DiGraph, cut: ST_partition) -> str:
     """
     Given a graph G and a cut, return the vector representation of the cut as string.
     """
@@ -50,35 +54,39 @@ def get_immediate_children(internal_vector: str, leaf_vector: str) -> list[str]:
     return children
 
 
-def minimum_s_cut(G: nx.DiGraph, fixed_s) -> tuple[int | float, tuple[set, set]]:
+def minimum_s_cut(G: nx.DiGraph, fixed_s) -> Tuple[Cut_value, ST_partition]:
     """
     Given a graph G and a fixed source node, return the min cut of the graph with the fixed node.
     """
     nodes = list(G.nodes)
     nodes.remove(fixed_s)
-    min_cut = (math.inf, ())
+    min_cut_value = math.inf
+    st_partition = ()
     for node in nodes:
         if node != fixed_s:
-            if min_cut[0] > minimum_cut(G, fixed_s, node, flow_func=edmonds_karp)[0]:
-                min_cut = minimum_cut(G, fixed_s, node, flow_func=edmonds_karp)
-    return min_cut
+            current_cut_value = minimum_cut(G, fixed_s, node, flow_func=edmonds_karp)[0]
+            if min_cut_value > current_cut_value:
+                min_cut_value, st_partition = minimum_cut(G, fixed_s, node, flow_func=edmonds_karp)
+    return min_cut_value, st_partition
 
 
-def minimum_t_cut(G: nx.DiGraph, fixed_t) -> tuple[int | float, tuple[set, set]]:
+def minimum_t_cut(G: nx.DiGraph, fixed_t) -> Tuple[Cut_value, ST_partition]:
     """
     Given a graph G and a fixed sink node, return the min cut of the graph with the fixed node.
     """
     nodes = list(G.nodes)
     nodes.remove(fixed_t)
-    min_cut = (math.inf, ())
+    min_cut_value = math.inf
+    st_partition = ()
     for node in nodes:
         if node != fixed_t:
-            if min_cut[0] > minimum_cut(G, node, fixed_t, flow_func=edmonds_karp)[0]:
-                min_cut = minimum_cut(G, node, fixed_t, flow_func=edmonds_karp)
-    return min_cut
+            current_cut_value = minimum_cut(G, node, fixed_t, flow_func=edmonds_karp)[0]
+            if min_cut_value > current_cut_value:
+                min_cut_value, st_partition = minimum_cut(G, node, fixed_t, flow_func=edmonds_karp)
+    return min_cut_value, st_partition
 
 
-def global_min_cut(G: nx.DiGraph) -> tuple[int | float, tuple[set, set]]:
+def global_min_cut(G: nx.DiGraph) -> Tuple[Cut_value, ST_partition]:
     """
     Given a graph G, return the global min cut of the graph.
     """
@@ -87,13 +95,16 @@ def global_min_cut(G: nx.DiGraph) -> tuple[int | float, tuple[set, set]]:
     if len(nodes) == 1:
         return (math.inf, (set(nodes), set()))
     fixed_node = nodes[0]
-    min_s_cut = minimum_s_cut(G, fixed_node)
-    min_t_cut = minimum_t_cut(G, fixed_node)
+    min_s_cut_value, min_s_cut_partition = minimum_s_cut(G, fixed_node)
+    min_t_cut_value, min_t_cut_partition = minimum_t_cut(G, fixed_node)
 
-    return min_s_cut if min_s_cut[0] <= min_t_cut[0] else min_t_cut
+    if min_s_cut_value <= min_t_cut_value:
+        return min_s_cut_value, min_s_cut_partition
+    else:
+        return min_t_cut_value, min_t_cut_partition
+        
 
-
-def partly_specified_min_cut(G: nx.DiGraph, child_vector: str) -> tuple[int | float, tuple[set, set]]:
+def partly_specified_min_cut(G: nx.DiGraph, child_vector: str) -> Tuple[Cut_value, ST_partition]:
     """
     Given a collapsed graph G (at least one node is specified as S or T because of the 'collapse_graph()' method), 
     return the min cut of the collapsed graph with the specified cut.
@@ -168,7 +179,7 @@ def collapse_graph(G: nx.DiGraph, mother: str) -> nx.DiGraph:
     return G_collapsed
 
 
-def get_original_partition(G: nx.DiGraph, partition: tuple[set, set], mother: str) -> tuple[set, set]:
+def get_original_partition(G: nx.DiGraph, partition: ST_partition, mother: str) -> ST_partition:
     """
     Given a graph G, a partition with collapsed nodes 'S' and 'T' and mother vector that was used to collapse the graph, return the partition with the original nodes.
     """
@@ -197,7 +208,7 @@ def get_original_partition(G: nx.DiGraph, partition: tuple[set, set], mother: st
     return original_partition
 
 
-def varizani_yannakakis_directed(G: nx.DiGraph) -> list[tuple[int | float, tuple[set, set]]]:
+def varizani_yannakakis_directed(G: nx.DiGraph) -> list[Cut]:
     """
     Varizani-Yannakakis algorithm for enumerating all min-cuts of a graph G.
     """
@@ -208,7 +219,7 @@ def varizani_yannakakis_directed(G: nx.DiGraph) -> list[tuple[int | float, tuple
     
     # Initialize priority queue with the min cut value, it's node partition, the mother vector and all possible leaf vectors
     queue = PriorityQueue()
-    queue.put(Cut(min_cut_value, {'partition': min_cut_partition, 'partition_vector': min_cut_vector, 'mother': ''}))
+    queue.put(Cut(min_cut_value, {'st_partition': min_cut_partition, 'partition_vector': min_cut_vector, 'mother': ''}))
 
     while not queue.empty():
 
@@ -216,7 +227,7 @@ def varizani_yannakakis_directed(G: nx.DiGraph) -> list[tuple[int | float, tuple
         current_cut: Cut = queue.get()
 
         # Add the current cut to the list of enumerated cuts
-        enumerated_cuts.append((current_cut.value, current_cut.partition))
+        enumerated_cuts.append(current_cut)
         # print(current_cut.value, current_cut.partition_vector)
 
         # Get the immediate children of the current cut
@@ -229,13 +240,13 @@ def varizani_yannakakis_directed(G: nx.DiGraph) -> list[tuple[int | float, tuple
             child_min_vector = cut_to_vector(G, child_min_partition)
 
             # Add the min cut of the child to the queue
-            queue.put(Cut(child_min_value, {'partition': child_min_partition, 'partition_vector': child_min_vector, 'mother': child_vector}))
+            queue.put(Cut(child_min_value, {'st_partition': child_min_partition, 'partition_vector': child_min_vector, 'mother': child_vector}))
 
     # Return the list of enumerated cuts
     return enumerated_cuts
 
 
-def varizani_yannakakis(G: nx.DiGraph | nx.Graph) -> list[tuple[int | float, tuple[set, set]]]:
+def varizani_yannakakis(G: nx.DiGraph | nx.Graph) -> list[Cut]:
     """
     Wrapper function for the Varizani-Yannakakis algorithm that works with directed and undirected graphs.
     """

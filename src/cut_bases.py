@@ -1,11 +1,9 @@
 import networkx as nx
-from networkx.algorithms.flow import edmonds_karp, minimum_cut
-import math
-import icecream as ic
-import varizani_yannakakis as vy
 import fast_gauss as fg
+import varizani_yannakakis as vy
 
-def cut_partition_to_edge_partition(G: nx.DiGraph, cut_partition: tuple[set, set]) -> set:
+
+def cut_partition_to_edge_partition(G: nx.DiGraph, cut_partition: vy.ST_partition) -> set:
     edge_partition = set()
     for edge in G.edges():
         # print(edge)
@@ -37,7 +35,7 @@ def edge_vectors_to_matrix(edge_vectors: list[str]) -> list[list[int]]:
 
 
 def canonical_greedy_cut_basis(G: nx.Graph) -> list[list[int]]:
-    cuts = [cut[1] for cut in vy.varizani_yannakakis(G)]
+    cuts = [cut.st_partition for cut in vy.varizani_yannakakis(G)]
     edge_vectors = []
     for cut in cuts:
         edge_partition = cut_partition_to_edge_partition(G, cut)
@@ -58,14 +56,14 @@ if __name__ == '__main__':
 
     cuts = vy.varizani_yannakakis(G)
 
-    best_cut = cut_partition_to_edge_partition(G, cuts[0][1])
-    second_best_cut = cut_partition_to_edge_partition(G, cuts[1][1])
+    best_cut = cut_partition_to_edge_partition(G, cuts[0].st_partition)
+    second_best_cut = cut_partition_to_edge_partition(G, cuts[1].st_partition)
 
 
     edge_vectors = []
     print(G.edges())    
     for cut in cuts:
-        edge_vectors += [edge_partition_to_vector(G, cut_partition_to_edge_partition(G, cut[1]))]
+        edge_vectors += [edge_partition_to_vector(G, cut_partition_to_edge_partition(G, cut.st_partition))]
 
     mat = edge_vectors_to_matrix(edge_vectors)
     print(mat[:2])
