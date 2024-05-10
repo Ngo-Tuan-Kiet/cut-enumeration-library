@@ -105,29 +105,24 @@ def global_min_cut_undirected(G: nx.DiGraph) -> tuple[int | float, tuple[set, se
     for node in nodes[1:-1]: 
         mother1="0"+(node-1)*"0"+"1"
         mother2="0"+(node-1)*"1"+"0"
-        print(mother1)
-        print(mother2)
-
-        #
-        min_cut1=partly_specified_min_cut(G, mother1)
+       
+        min_cut1=partly_specified_min_cut(G, mother1) #child_min_value, child_min_partition = partly_specified_min_cut(G, child_vector)
         min_cut2=partly_specified_min_cut(G, mother2)
-        min_cut_i=min_cut1 if min_cut1[0] <= min_cut2[0] else min_cut2
-        min_cut=min_cut_i if min_cut_i[0]<min_cut[0] else min_cut
-    return min_cut
-    print(min_cut)
+        if  min_cut1[0]<= min_cut2[0]:
+            min_cut_i=min_cut1
+            mother=mother1
+        else:
+            min_cut_i=min_cut2
+            mother=mother2
+        if min_cut_i[0]<min_cut[0]:
+            min_cut=min_cut_i
+            mmother=mother
+        
+
+    return (min_cut[0],get_original_partition(G, min_cut[1], mmother))
+    #print(min_cut[0],get_original_partition(G, min_cut[1], mmother))
     
-
-
-
-    # # Temporary fix for the case where the graph has only 1 node
-    # if len(nodes) == 1:
-    #     return (math.inf, (set(nodes), set()))
-    # fixed_node = nodes[0]
-    # min_s_cut = minimum_s_cut(G, fixed_node)
-    # min_t_cut = minimum_t_cut(G, fixed_node)
-
-    # return min_s_cut if min_s_cut[0] <= min_t_cut[0] else min_t_cut
-
+    
 
 def partly_specified_min_cut(G: nx.DiGraph, child_vector: str) -> tuple[int | float, tuple[set, set]]:
     """
@@ -135,10 +130,14 @@ def partly_specified_min_cut(G: nx.DiGraph, child_vector: str) -> tuple[int | fl
     return the min cut of the collapsed graph with the specified cut.
     """
     #for partially specified cuts of the form 0^k:
-    if "1" not in child_vector:
+    if "1" not in child_vector and len(child_vector) != len(G.nodes):
+        print("child_vector:")
+        print(child_vector)
         min_cut = (math.inf, ())
-        for x in range(1,len(child_vector)):
-            child_v=(len(G.nodes)-x)*"0"+"1"
+        for x in range(0,(len(G.nodes)-len(child_vector))): #(0,(len(G.nodes)-len(child_vector)))
+            child_v=child_vector+ x*"0"+"1"
+            print("child_v=")
+            print(child_v)
             collapsed_graph = collapse_graph(G, child_v)
             if min_cut[0] > minimum_cut(collapsed_graph, 'S', 'T', flow_func=edmonds_karp)[0]:
                 min_cut=minimum_cut(collapsed_graph, 'S', 'T', flow_func=edmonds_karp)
@@ -252,12 +251,12 @@ def varizani_yannakakis_directed(G: nx.DiGraph) -> list[tuple[int | float, tuple
     """
     enumerated_cuts = []
     # Calculate the global min cut of the graph and get necessary data
-    min_cut_value, min_cut_partition = global_min_cut(G)
+    min_cut_value, min_cut_partition = global_min_cut_undirected(G) #global_min_cut(G)
     min_cut_vector = cut_to_vector(G, min_cut_partition)
     
     # Initialize priority queue with the min cut value, it's node partition, the mother vector and all possible leaf vectors
     queue = PriorityQueue()
-    queue.put(Cut(min_cut_value, {'partition': min_cut_partition, 'partition_vector': min_cut_vector, 'mother': ''}))
+    queue.put(Cut(min_cut_value, {'partition': min_cut_partition, 'partition_vector': min_cut_vector, 'mother': '0'})) #'mother': ''
 
     while not queue.empty():
 
@@ -266,7 +265,7 @@ def varizani_yannakakis_directed(G: nx.DiGraph) -> list[tuple[int | float, tuple
 
         # Add the current cut to the list of enumerated cuts
         enumerated_cuts.append((current_cut.value, current_cut.partition))
-        print(current_cut.value, current_cut.partition_vector)
+        print(current_cut.value, current_cut.partition_vector, current_cut.mother)
 
         # Get the immediate children of the current cut
         immediate_children = get_immediate_children(current_cut.mother, current_cut.partition_vector)
@@ -324,5 +323,6 @@ if __name__ == '__main__':
     # plt.show()
     print(varizani_yannakakis_directed(G))
 
-    # print(global_min_cut_undirected(G))
+    #print(global_min_cut_undirected(G))
+    #print(global_min_cut(G))
     # print(G.nodes)
