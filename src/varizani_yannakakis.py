@@ -3,12 +3,15 @@ from networkx.algorithms.flow import edmonds_karp, minimum_cut
 import math
 from queue import PriorityQueue
 from typing import Tuple, Union
+import cut_bases as cb
+import fast_gauss as fg
 
 
 # Type definitions congruent with output of min_cut method in networkx (tuple of mi-cut value and ST-partition)
 type NodeSet = set
 type Cut_value = Union[int, float]
 type ST_partition = Tuple[NodeSet, NodeSet]
+
 
 # Wrapper class for the cut data to be used in the priority queue
 class Cut:
@@ -246,14 +249,65 @@ def varizani_yannakakis_directed(G: nx.DiGraph) -> list[Cut]:
     return enumerated_cuts
 
 
-def varizani_yannakakis(G: nx.DiGraph | nx.Graph) -> list[Cut]:
+def greedy_varizani_yannakakis_directed(G: nx.DiGraph) -> list[Cut]:
+    """
+    Combination of the Varizani-Yannakakis algorithm and the greedy algorithm for computing a cut basis of the graph G.
+    """
+    cut_basis = []
+    matrix = []
+
+    # Calculate the global min cut of the graph and get necessary data
+    min_cut_value, min_cut_partition = global_min_cut(G)
+    min_cut_vector = cut_to_vector(G, min_cut_partition)
+    
+    # Initialize priority queue with the min cut value, it's node partition, the mother vector and all possible leaf vectors
+    queue = PriorityQueue()
+    queue.put(Cut(min_cut_value, {'st_partition': min_cut_partition, 'partition_vector': min_cut_vector, 'mother': ''}))
+
+    while not queue.empty():
+
+        # Get the current cut with the smallest value
+        current_cut: Cut = queue.get()
+
+        # Check the curerent cut for dependency
+        current_edge_partition = cb.cut_partition_to_edge_partition(G, current_cut.st_partition)
+        current_edge_vector = cb.edge_partition_to_vector(G, current_edge_partition)
+        matrix.append([int(bit) for bit in current_edge_vector])
+        if fg.has_dependent_rows(matrix):
+            matrix.pop()
+        else:
+            cut_basis.append(current_cut)
+
+        # If the cut basis is complete, return it
+        if len(cut_basis) == G.number_of_nodes() - 1:
+            return cut_basis
+
+        # Get the immediate children of the current cut
+        immediate_children = get_immediate_children(current_cut.mother, current_cut.partition_vector)
+
+        for child_vector in immediate_children:
+            # Calculate the min cut for the child and get the necessary data
+            child_min_value, child_min_partition = partly_specified_min_cut(G, child_vector)
+            child_min_partition = get_original_partition(G, child_min_partition, child_vector)
+            child_min_vector = cut_to_vector(G, child_min_partition)
+
+            # Add the min cut of the child to the queue
+            queue.put(Cut(child_min_value, {'st_partition': child_min_partition, 'partition_vector': child_min_vector, 'mother': child_vector}))
+
+
+def varizani_yannakakis(G: nx.DiGraph | nx.Graph, greedy=False) -> list[Cut]:
     """
     Wrapper function for the Varizani-Yannakakis algorithm that works with directed and undirected graphs.
     """
-    return varizani_yannakakis_directed(G) if G.is_directed() else varizani_yannakakis_directed(G.to_directed())
+    if greedy == False:
+        return varizani_yannakakis_directed(G) if G.is_directed() else varizani_yannakakis_directed(G.to_directed())
+    else:
+        return greedy_varizani_yannakakis_directed(G) if G.is_directed() else greedy_varizani_yannakakis_directed(G.to_directed())
 
 
 if __name__ == '__main__':
+    greedy = True
+
     # G = nx.DiGraph()
     # G.add_edge(1, 2, capacity=10)
     # G.add_edge(2, 1, capacity=10)
@@ -276,7 +330,7 @@ if __name__ == '__main__':
         G[edge[0]][edge[1]]['capacity'] = G[edge[0]][edge[1]]['order']
         del G[edge[0]][edge[1]]['order']
 
-    # print(varizani_yannakakis(G))
+    print(varizani_yannakakis(G, greedy))
 
     # G = collapse_graph(G, '001')
     # pos = nx.spring_layout(G)
