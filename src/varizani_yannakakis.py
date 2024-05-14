@@ -295,7 +295,7 @@ def greedy_varizani_yannakakis_directed(G: nx.DiGraph) -> list[Cut]:
             queue.put(Cut(child_min_value, {'st_partition': child_min_partition, 'partition_vector': child_min_vector, 'mother': child_vector}))
 
 
-def varizani_yannakakis(G: nx.DiGraph | nx.Graph, greedy=False) -> list[Cut]:
+def varizani_yannakakis(G: nx.DiGraph | nx.Graph, greedy=True) -> list[Cut]:
     """
     Wrapper function for the Varizani-Yannakakis algorithm that works with directed and undirected graphs.
     """
@@ -306,7 +306,14 @@ def varizani_yannakakis(G: nx.DiGraph | nx.Graph, greedy=False) -> list[Cut]:
 
 
 if __name__ == '__main__':
-    greedy = True
+    G = nx.read_graphml('data/example_molecules/0.graphml')
+
+    # Replace attribute 'order' with 'capacity' for all edges
+    for edge in G.edges:
+        G[edge[0]][edge[1]]['capacity'] = G[edge[0]][edge[1]]['order']
+        del G[edge[0]][edge[1]]['order']
+
+    print(varizani_yannakakis(G))
 
     # G = nx.DiGraph()
     # G.add_edge(1, 2, capacity=10)
@@ -322,15 +329,6 @@ if __name__ == '__main__':
     # G2.add_edge(1, 2, capacity=1)
     # G2.add_edge(2, 3, capacity=2)
     # G2.add_edge(3, 1, capacity=3)
-
-    G = nx.read_graphml('data/example_molecules/0.graphml')
-
-    # Replace attribute 'order' with 'capacity' for all edges
-    for edge in G.edges:
-        G[edge[0]][edge[1]]['capacity'] = G[edge[0]][edge[1]]['order']
-        del G[edge[0]][edge[1]]['order']
-
-    print(varizani_yannakakis(G, greedy))
 
     # G = collapse_graph(G, '001')
     # pos = nx.spring_layout(G)
