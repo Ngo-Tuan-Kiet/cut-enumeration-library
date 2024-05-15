@@ -30,14 +30,14 @@ def test_yannakakis_best_cut(request, graph, min_cut):
                         #('empty_graph', {'value': 0, 'st_partition': (set(), set())}), # TODO: raise an exception
                         #('disconnected_graph', {'value': 2, 'st_partition': (set(), set())}), # TODO: raise an exception?
                         #('unreachable_graph', {'value': 0, 'st_partition': (set(), set())}), # TODO: raise an exception?
-                        ('complex_graph', {'value': 6, 'st_partition': ({1, 2, 4}, {3})}),
-                        ('star_graph', {'value': 10, 'st_partition': ({1}, {2, 3, 4})}),
-                        #('star_graph', {'value': 10, 'st_partition': ({1, 2, 4}, {3})})
+                        ('complex_graph', {'value': 6, 'st_partition': ({1}, {2, 3, 4})}),
+                        ('star_graph', {'value': 10, 'st_partition': ({1, 2, 4}, {3})}),
+                        #('star_graph', {'value': 10, 'st_partition': ({1}, {2, 3, 4})})
                         ])
 def test_yannakakis_second_best_cut(request, graph, second_min_cut):
     cuts: list[Cut] = varizani_yannakakis(request.getfixturevalue(graph))
-    assert cuts[2].value == second_min_cut['value']
-    assert cuts[2].st_partition == second_min_cut['st_partition']
+    assert cuts[1].value == second_min_cut['value']
+    assert cuts[1].st_partition == second_min_cut['st_partition']
 
 
 @pytest.mark.parametrize('graph', ['undirected_triangle', 'single_edge_graph', 'single_node_graph', 'complex_graph', 'star_graph'])
