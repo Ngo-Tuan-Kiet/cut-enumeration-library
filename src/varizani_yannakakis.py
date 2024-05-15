@@ -295,7 +295,7 @@ def greedy_varizani_yannakakis_directed(G: nx.DiGraph) -> list[Cut]:
             queue.put(Cut(child_min_value, {'st_partition': child_min_partition, 'partition_vector': child_min_vector, 'mother': child_vector}))
 
 
-def varizani_yannakakis(G: nx.DiGraph | nx.Graph, greedy=True) -> list[Cut]:
+def varizani_yannakakis(G: nx.DiGraph | nx.Graph, greedy=False) -> list[Cut]:
     """
     Wrapper function for the Varizani-Yannakakis algorithm that works with directed and undirected graphs.
     """
