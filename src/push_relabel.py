@@ -1,7 +1,7 @@
 import networkx as nx
 
 
-def initialize(graph, s):
+def initialize(G, s):
     for v in G.nodes:
         G.nodes[v]['excess'] = 0
         G.nodes[v]['height'] = 0
@@ -17,7 +17,7 @@ def initialize(graph, s):
         G.nodes[s]['excess'] -= G.edges[s, u]['capacity']
 
 
-def push(graph, u, v):
+def push(G, u, v):
     send = min(G.nodes[u]['excess'], G.edges[u, v]['capacity'])
     G.nodes[u]['excess'] -= send
     G.nodes[v]['excess'] += send
@@ -25,7 +25,7 @@ def push(graph, u, v):
     G.edges[v, u]['preflow'] -= send
 
 
-def relabel(graph, u):
+def relabel(G, u):
     if G.nodes[u]['excess'] <= 0:
         return ValueError('excess must be positive to relabel')
 
@@ -52,8 +52,8 @@ def edge_cuts_to_st_partition(graph, edge_cuts, s):
     return (S, T)
 
 
-def push_relabel(graph, s, t):
-    initialize(graph, s)
+def push_relabel(G, s, t):
+    initialize(G, s)
     while not all([G.nodes[v]['excess'] <= 0 for v in G.nodes if v != s and v != t]):
         u = [v for v in G.nodes if v != s and v != t and G.nodes[v]['excess'] > 0][0]
         neighbors = [v for v in G.neighbors(u) if \
@@ -70,7 +70,7 @@ def push_relabel(graph, s, t):
     edges = get_saturated_edges(G)
     S, T = edge_cuts_to_st_partition(G, edges, s)    
 
-    return (G.nodes[t]['excess'], S, T)
+    return (G.nodes[t]['excess'], (S, T))
 
 
 if __name__ == '__main__':
