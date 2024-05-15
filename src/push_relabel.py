@@ -1,8 +1,7 @@
 import networkx as nx
-from icecream import ic
+
 
 def initialize(graph, s):
-    G = graph.copy()
     for v in G.nodes:
         G.nodes[v]['excess'] = 0
         G.nodes[v]['height'] = 0
@@ -17,23 +16,16 @@ def initialize(graph, s):
         G.nodes[u]['excess'] = G.edges[s, u]['capacity']
         G.nodes[s]['excess'] -= G.edges[s, u]['capacity']
 
-    return G
-
 
 def push(graph, u, v):
-    G = graph.copy()
     send = min(G.nodes[u]['excess'], G.edges[u, v]['capacity'])
-    ic('send', send)
     G.nodes[u]['excess'] -= send
     G.nodes[v]['excess'] += send
     G.edges[u, v]['preflow'] += send
     G.edges[v, u]['preflow'] -= send
 
-    return G
-
 
 def relabel(graph, u):
-    G = graph.copy()
     if G.nodes[u]['excess'] <= 0:
         return ValueError('excess must be positive to relabel')
 
@@ -42,8 +34,6 @@ def relabel(graph, u):
         if G.edges[u, v]['preflow'] < G.edges[u, v]['capacity']:
             min_height = min(min_height, G.nodes[v]['height'])
     G.nodes[u]['height'] = min_height + 1
-
-    return G
 
 
 def get_saturated_edges(graph):
@@ -63,7 +53,7 @@ def edge_cuts_to_st_partition(graph, edge_cuts, s):
 
 
 def push_relabel(graph, s, t):
-    G = initialize(graph, s)
+    initialize(graph, s)
     while not all([G.nodes[v]['excess'] <= 0 for v in G.nodes if v != s and v != t]):
         u = [v for v in G.nodes if v != s and v != t and G.nodes[v]['excess'] > 0][0]
         neighbors = [v for v in G.neighbors(u) if \
@@ -71,13 +61,11 @@ def push_relabel(graph, s, t):
                     G.edges[u, v]['preflow'] < G.edges[u, v]['capacity']] # c_f(u, v) > 0
         
         if neighbors:
-            G = push(G, u, neighbors[0])
-            print('Pushing', u, neighbors[0])
+            push(G, u, neighbors[0])
+            # print('Pushing', u, neighbors[0])
         elif all([G.nodes[u]['height'] <= G.nodes[v]['height'] for v in G.neighbors(u) if G.edges[u, v]['preflow'] < G.edges[u, v]['capacity']]):
-            G = relabel(G, u)
-            print('Relabeling', u)
-        
-        #print('----------')
+            relabel(G, u)
+            # print('Relabeling', u)
 
     edges = get_saturated_edges(G)
     S, T = edge_cuts_to_st_partition(G, edges, s)    
@@ -95,4 +83,4 @@ if __name__ == '__main__':
     
     min_cut = push_relabel(G, 1, 3)
 
-    ic(min_cut)
+    print(min_cut)
