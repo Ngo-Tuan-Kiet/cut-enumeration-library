@@ -216,13 +216,16 @@ def varizani_yannakakis_directed(G: nx.DiGraph) -> list[Cut]:
     Varizani-Yannakakis algorithm for enumerating all min-cuts of a graph G.
     """
     enumerated_cuts = []
+
     # Calculate the global min cut of the graph and get necessary data
     min_cut_value, min_cut_partition = global_min_cut(G)
     min_cut_vector = cut_to_vector(G, min_cut_partition)
+    mother = '0' if min_cut_vector[0] == '0' else '1'
+
     
     # Initialize priority queue with the min cut value, it's node partition, the mother vector and all possible leaf vectors
     queue = PriorityQueue()
-    queue.put(Cut(min_cut_value, {'st_partition': min_cut_partition, 'partition_vector': min_cut_vector, 'mother': ''}))
+    queue.put(Cut(min_cut_value, {'st_partition': min_cut_partition, 'partition_vector': min_cut_vector, 'mother': mother}))
 
     while not queue.empty():
 
@@ -259,10 +262,11 @@ def greedy_varizani_yannakakis_directed(G: nx.DiGraph) -> list[Cut]:
     # Calculate the global min cut of the graph and get necessary data
     min_cut_value, min_cut_partition = global_min_cut(G)
     min_cut_vector = cut_to_vector(G, min_cut_partition)
+    mother = '0' if min_cut_vector[0] == '0' else '1'
     
     # Initialize priority queue with the min cut value, it's node partition, the mother vector and all possible leaf vectors
     queue = PriorityQueue()
-    queue.put(Cut(min_cut_value, {'st_partition': min_cut_partition, 'partition_vector': min_cut_vector, 'mother': ''}))
+    queue.put(Cut(min_cut_value, {'st_partition': min_cut_partition, 'partition_vector': min_cut_vector, 'mother': mother}))
 
     while not queue.empty():
 
@@ -306,14 +310,14 @@ def varizani_yannakakis(G: nx.DiGraph | nx.Graph, greedy=False) -> list[Cut]:
 
 
 if __name__ == '__main__':
-    G = nx.read_graphml('data/example_molecules/0.graphml')
+    G = nx.read_graphml('data/example_molecules/150.graphml')
 
     # Replace attribute 'order' with 'capacity' for all edges
     for edge in G.edges:
         G[edge[0]][edge[1]]['capacity'] = G[edge[0]][edge[1]]['order']
         del G[edge[0]][edge[1]]['order']
 
-    print(varizani_yannakakis(G))
+    complete_cut_set = (varizani_yannakakis(G))
 
     # G = nx.DiGraph()
     # G.add_edge(1, 2, capacity=10)
