@@ -31,7 +31,7 @@ def relabel(G, u):
 
     min_height = float('inf')
     for v in G.neighbors(u):
-        if G.edges[u, v]['preflow'] < G.edges[u, v]['capacity']:
+        if are_neighbors_in_residual_graph(G, u, v):
             min_height = min(min_height, G.nodes[v]['height'])
     G.nodes[u]['height'] = min_height + 1
 
@@ -52,25 +52,52 @@ def edge_cuts_to_st_partition(graph, edge_cuts, s):
     return (S, T)
 
 
+def has_active_nodes(G, s, t):
+    return any([G.nodes[v]['excess'] > 0 for v in G.nodes if v != s and v != t])
+
+
+def get_active_node(G, s, t):
+    return [v for v in G.nodes if G.nodes[v]['excess'] > 0 and v != s and v != t][0]
+
+
+def are_neighbors_in_residual_graph(G, u, v):
+    return v in G.neighbors(u) and G.edges[u, v]['preflow'] < G.edges[u, v]['capacity']
+
+
+def get_neighbor_for_push(G, u):
+    try:
+        return [v for v in G.neighbors(u) if 
+            are_neighbors_in_residual_graph(G, u, v) and # c_f(u, v) > 0
+            G.nodes[u]['height'] == G.nodes[v]['height'] + 1][0] # h(u) = h(v) + 1\
+    except IndexError:
+        return None
+    
+
+def needs_relabeling(G, u):
+    return all([G.nodes[u]['height'] <= G.nodes[v]['height'] for v in G.neighbors(u) if are_neighbors_in_residual_graph(G, u, v)])
+
+
 def push_relabel(G, s, t):
+
     initialize(G, s)
-    while not all([G.nodes[v]['excess'] <= 0 for v in G.nodes if v != s and v != t]):
-        u = [v for v in G.nodes if v != s and v != t and G.nodes[v]['excess'] > 0][0]
-        neighbors = [v for v in G.neighbors(u) if \
-                    G.nodes[u]['height'] == G.nodes[v]['height'] + 1 and # h(u) = h(v) + 1\ 
-                    G.edges[u, v]['preflow'] < G.edges[u, v]['capacity']] # c_f(u, v) > 0
+
+    while has_active_nodes(G, s, t):
+        u = get_active_node(G, s, t)
+        v = get_neighbor_for_push(G, u)
         
-        if neighbors:
-            push(G, u, neighbors[0])
+        if v:
+            push(G, u, v)
             # print('Pushing', u, neighbors[0])
-        elif all([G.nodes[u]['height'] <= G.nodes[v]['height'] for v in G.neighbors(u) if G.edges[u, v]['preflow'] < G.edges[u, v]['capacity']]):
+
+        elif needs_relabeling(G, u):
             relabel(G, u)
             # print('Relabeling', u)
 
-    edges = get_saturated_edges(G)
-    S, T = edge_cuts_to_st_partition(G, edges, s)    
+    saturated_edges = get_saturated_edges(G)
+    S, T = edge_cuts_to_st_partition(G, saturated_edges, s)
+    cut_value = G.nodes[t]['excess']  
 
-    return (G.nodes[t]['excess'], (S, T))
+    return (cut_value, (S, T))
 
 
 if __name__ == '__main__':
