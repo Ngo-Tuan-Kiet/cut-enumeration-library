@@ -1,47 +1,78 @@
 import networkx as nx
+import math
+
+
+ACTIVE_NODES = []
 
 
 def initialize(G, s):
+    """
+    Initializes the graph for the push-relabel algorithm.
+    """
     for v in G.nodes:
         G.nodes[v]['excess'] = 0
         G.nodes[v]['height'] = 0
+    G.nodes[s]['excess'] = math.inf
     G.nodes[s]['height'] = len(G.nodes)
     
     for u, v in G.edges:
         G.edges[u, v]['preflow'] = 0
         G.edges[v, u]['preflow'] = 0
-    
-    for u in G.neighbors(s):
-        G.edges[s, u]['preflow'] = G.edges[s, u]['capacity']
-        G.nodes[u]['excess'] = G.edges[s, u]['capacity']
-        G.nodes[s]['excess'] -= G.edges[s, u]['capacity']
 
 
-def push(G, u, v):
-    send = min(G.nodes[u]['excess'], G.edges[u, v]['capacity'])
+def push(G, s, t, u, v):
+    """
+    Pushes flow from u to v.
+    """
+    send = min(G.nodes[u]['excess'], G.edges[u, v]['capacity'] - G.edges[u, v]['preflow'])
     G.nodes[u]['excess'] -= send
     G.nodes[v]['excess'] += send
     G.edges[u, v]['preflow'] += send
     G.edges[v, u]['preflow'] -= send
 
+    if v != s and v != t:
+        ACTIVE_NODES.append(v)
+
 
 def relabel(G, u):
-    if G.nodes[u]['excess'] <= 0:
-        return ValueError('excess must be positive to relabel')
-
-    min_height = float('inf')
+    """
+    Relabels the height of node u.
+    """
+    heights = []
     for v in G.neighbors(u):
-        if are_neighbors_in_residual_graph(G, u, v):
-            min_height = min(min_height, G.nodes[v]['height'])
+        if G.edges[u, v]['capacity'] - G.edges[u, v]['preflow'] > 0:
+            heights.append(G.nodes[v]['height'])
+            min_height = min(heights)
+
     G.nodes[u]['height'] = min_height + 1
 
 
-def get_saturated_edges(graph):
-    return [(u, v) for u, v in graph.edges if graph.edges[u, v]['preflow'] == graph.edges[u, v]['capacity']]
+def discharge(G, s, t, u):
+    """
+    Discharges the excess flow from node u.
+    """
+    while G.nodes[u]['excess'] > 0:
+        for v in G.neighbors(u):
+            if G.nodes[u]['height'] == G.nodes[v]['height'] + 1 and G.edges[u, v]['capacity'] - G.edges[u, v]['preflow'] > 0:
+                push(G, s, t, u, v)
+                if G.nodes[u]['excess'] == 0:
+                    break
+            else:
+                relabel(G, u)
 
 
-def edge_cuts_to_st_partition(graph, edge_cuts, s):
-    G = graph.copy()
+def get_saturated_edges(G):
+    """
+    Returns the edges with saturated flow.
+    """
+    return [(u, v) for u, v in G.edges if G.edges[u, v]['preflow'] == G.edges[u, v]['capacity']]
+
+
+def edge_cuts_to_st_partition(G, edge_cuts, s):
+    """
+    Returns the S-T partition from the edge cuts.
+    """
+    G = G.copy()
 
     for u, v in edge_cuts:
         G.remove_edge(u, v)
@@ -52,52 +83,34 @@ def edge_cuts_to_st_partition(graph, edge_cuts, s):
     return (S, T)
 
 
-def has_active_nodes(G, s, t):
-    return any([G.nodes[v]['excess'] > 0 for v in G.nodes if v != s and v != t])
+def push_relabel_directed(G, s, t):
+    """
+    Push-relabel algorithm for directed graphs.
+    """
+    initialize(G, s)
 
+    # Push preflow from s to neighbors
+    for u in G.neighbors(s):
+        push(G, s, t, s, u)
 
-def get_active_node(G, s, t):
-    return [v for v in G.nodes if G.nodes[v]['excess'] > 0 and v != s and v != t][0]
+    # Discharge active nodes
+    while ACTIVE_NODES:
+        u = ACTIVE_NODES.pop()
+        discharge(G, s, t, u)
 
+    # Find S-T partition from saturated edges
+    saturated_edges = get_saturated_edges(G)
+    S, T = edge_cuts_to_st_partition(G, saturated_edges, s)
+    cut_value = G.nodes[t]['excess'] 
 
-def are_neighbors_in_residual_graph(G, u, v):
-    return v in G.neighbors(u) and G.edges[u, v]['preflow'] < G.edges[u, v]['capacity']
-
-
-def get_neighbor_for_push(G, u):
-    try:
-        return [v for v in G.neighbors(u) if 
-            are_neighbors_in_residual_graph(G, u, v) and # c_f(u, v) > 0
-            G.nodes[u]['height'] == G.nodes[v]['height'] + 1][0] # h(u) = h(v) + 1\
-    except IndexError:
-        return None
-    
-
-def needs_relabeling(G, u):
-    return all([G.nodes[u]['height'] <= G.nodes[v]['height'] for v in G.neighbors(u) if are_neighbors_in_residual_graph(G, u, v)])
+    return (cut_value, (S, T))
 
 
 def push_relabel(G, s, t):
-
-    initialize(G, s)
-
-    while has_active_nodes(G, s, t):
-        u = get_active_node(G, s, t)
-        v = get_neighbor_for_push(G, u)
-        
-        if v:
-            push(G, u, v)
-            # print('Pushing', u, neighbors[0])
-
-        elif needs_relabeling(G, u):
-            relabel(G, u)
-            # print('Relabeling', u)
-
-    saturated_edges = get_saturated_edges(G)
-    S, T = edge_cuts_to_st_partition(G, saturated_edges, s)
-    cut_value = G.nodes[t]['excess']  
-
-    return (cut_value, (S, T))
+    """
+    Push-relabel wrapper for undirected graphs.
+    """
+    return push_relabel_directed(G, s, t) if G.is_directed() else push_relabel_directed(G.to_directed(), s, t)
 
 
 if __name__ == '__main__':
@@ -108,6 +121,6 @@ if __name__ == '__main__':
     G.add_edge(4, 1, capacity=5)
     G.add_edge(2, 4, capacity=3)
     
-    min_cut = push_relabel(G, 1, 3)
+    min_cut = push_relabel(G, 1, 4)
 
     print(min_cut)
