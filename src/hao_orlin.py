@@ -26,7 +26,7 @@ def hao_orlin(G, s):
             G.edges[v, u]['preflow'] = 0
 
 
-    def push(G, s, t, u, v):
+    def push(G, u, v):
         """
         Pushes flow from u to v.
         """
@@ -53,7 +53,7 @@ def hao_orlin(G, s):
         G.nodes[u]['height'] = min_height + 1
 
 
-    def discharge(G, s, t, u):
+    def discharge(G, u):
         """
         Discharges the excess flow from node u.
         """
