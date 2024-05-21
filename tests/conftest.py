@@ -76,3 +76,16 @@ def star_graph():
     G.add_edge(2, 3, capacity=10)
     G.add_edge(2, 4, capacity=1)
     return G
+
+
+@pytest.fixture()
+# https://networkx.org/documentation/stable/auto_examples/drawing/plot_weighted_graph.html
+def networkx_example_weighted_graph():
+    G = nx.Graph()
+    G.add_edge("a", "b", capacity=6)
+    G.add_edge("a", "c", capacity=2)
+    G.add_edge("c", "d", capacity=1)
+    G.add_edge("c", "e", capacity=7)
+    G.add_edge("c", "f", capacity=9)
+    G.add_edge("a", "d", capacity=3)
+    return G
