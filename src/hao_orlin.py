@@ -6,13 +6,10 @@ from icecream import ic
 from collections import Counter
 
 
-def push_relabel_directed(G, s, t):
-    """
-    Push-relabel algorithm for directed graphs.
-    """
+def hao_orlin(G, s):
     ACTIVE_NODES = []
 
-    def initialize():
+    def initialize(G, s):
         """
         Initializes the graph for the push-relabel algorithm.
         """
@@ -29,7 +26,7 @@ def push_relabel_directed(G, s, t):
             G.edges[v, u]['preflow'] = 0
 
 
-    def push(u, v):
+    def push(G, s, t, u, v):
         """
         Pushes flow from u to v.
         """
@@ -39,11 +36,11 @@ def push_relabel_directed(G, s, t):
         G.edges[u, v]['preflow'] += send
         G.edges[v, u]['preflow'] -= send
 
-        if v != s and v != t:
+        if v != s and v != t and G.nodes[v]['distance'] < k:
             ACTIVE_NODES.append(v)
 
 
-    def relabel(u):
+    def relabel(G, u):
         """
         Relabels the height of node u.
         """
@@ -56,31 +53,33 @@ def push_relabel_directed(G, s, t):
         G.nodes[u]['height'] = min_height + 1
 
 
-    def discharge(u):
+    def discharge(G, s, t, u):
         """
         Discharges the excess flow from node u.
         """
         while G.nodes[u]['excess'] > 0:
             for v in G.neighbors(u):
                 if G.nodes[u]['height'] == G.nodes[v]['height'] + 1 and G.edges[u, v]['capacity'] - G.edges[u, v]['preflow'] > 0:
-                    push(u, v)
+                    push(G, s, t, u, v)
                     if G.nodes[u]['excess'] == 0:
                         break
                 else:
-                    relabel(u)
+                    relabel(G, u)
 
 
-    def get_saturated_edges():
+    def get_saturated_edges(G):
         """
         Returns the edges with saturated flow.
         """
         return [(u, v) for u, v in G.edges if G.edges[u, v]['preflow'] == G.edges[u, v]['capacity']]
 
 
-    def edge_cuts_to_st_partition(edge_cuts):
+    def edge_cuts_to_st_partition(G, edge_cuts, s):
         """
         Returns the S-T partition from the edge cuts.
         """
+        G = G.copy()
+
         for u, v in edge_cuts:
             G.remove_edge(u, v)
         
@@ -89,30 +88,72 @@ def push_relabel_directed(G, s, t):
 
         return (S, T)
 
-    initialize()
-
-    # Push preflow from s to neighbors
-    for u in G.neighbors(s):
-        push(s, u)
-
-    # Discharge active nodes
-    while ACTIVE_NODES:
-        u = ACTIVE_NODES.pop()
-        discharge(u)
-
-    # Find S-T partition from saturated edges
-    saturated_edges = get_saturated_edges()
-    S, T = edge_cuts_to_st_partition(saturated_edges)
-    cut_value = G.nodes[t]['excess'] 
-
-    return (cut_value, (S, T))
+    def push_relabel_test(G, s, t):
+        """
+        Push-relabel algorithm for directed graphs.
+        """
+        # Discharge active nodes
+        while ACTIVE_NODES:
+            u = ACTIVE_NODES.pop()
+            discharge(G, s, t, u)
 
 
-def push_relabel(G, s, t):
-    """
-    Push-relabel wrapper for undirected graphs.
-    """
-    return push_relabel_directed(G, s, t) if G.is_directed() else push_relabel_directed(G.to_directed(), s, t)
+    n = G.number_of_nodes()
+    initialize(G, s)
+    X = {s}
+    cutval = float('inf')
+    cut = set()
+    available_nodes = set(G.nodes) - X
+    t_prime = None
+    t = available_nodes.pop()
+    k = n - 1
+
+    while X != set(G.nodes()):
+        ACTIVE_NODES = [i for i in G.nodes() if G.nodes[i]['distance'] < n - 1 and G.nodes[i]['excess'] > 0]
+        
+        push_relabel_test(G, s, t)
+
+        distances_of_active_nodes = [G.nodes[i]['distance'] for i in ACTIVE_NODES]
+        distances_counter = Counter(distances_of_active_nodes)
+        unique_distances = [distance for distance, count in distances_counter.items() if count == 1]
+
+        # For each unique distance, check if all neighbors in residual graph have a higher distance
+        valid_distances = []
+        for distance in unique_distances:
+            for i in ACTIVE_NODES:
+                if G.nodes[i]['distance'] == distance:
+                    if all(G.nodes[j]['distance'] > distance for j in G.neighbors(i) if G.edges[i, j]['capacity'] > G.edges[i, j]['preflow']):
+                        valid_distances.append(distance)
+                        break
+
+        # If there are valid distances, take the minimum. Otherwise, set to n-1
+        k = min(valid_distances, default=n-1)
+
+        S = {i for i in G.nodes() if G.nodes[i]['distance'] >= k}
+        u_delta_S = sum(G[u][v]['capacity'] for u in S for v in G[u] if v not in S)
+
+        if u_delta_S < cutval:
+            cutval = u_delta_S
+            cut = S
+
+        for node in G.nodes():
+            print([G.nodes[t]['distance'] < G.nodes[v]['distance'] for v in G.nodes() - X - {t}])
+            if node != t and all(G.nodes[node]['distance'] <= G.nodes[v]['distance'] for v in G.nodes() - X - {t}):
+                t_prime = node
+                print(f"t_prime: {t_prime}")
+                break
+            
+        X.add(t)
+        G.nodes[t]['distance'] = n
+        for v in G.neighbors(t):
+            if G.edges[t, v]['capacity'] - G.edges[t, v]['preflow'] > 0:
+                push(G, s, t, t, v)
+
+        discharge(G, s, t, t)
+
+        t = t_prime
+
+    return cutval, cut
 
 
 if __name__ == '__main__':
@@ -139,6 +180,7 @@ if __name__ == '__main__':
     # plt.axis('off')
     # plt.show()
 
+    ha = hao_orlin(G, 1)
 
     # t0 = time.time()
     # min_cut = nx.minimum_cut(G, '1', '64')
