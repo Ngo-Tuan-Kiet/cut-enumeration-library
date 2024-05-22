@@ -98,6 +98,8 @@ def hao_orlin(G, s):
         while G.nodes[u]['excess'] > 0:
             for v in G.neighbors(u):
                 level = levels[G.nodes[u]['height']]
+                if G.nodes[u]['height'] >= k:
+                    break
                 if G.nodes[u]['height'] == G.nodes[v]['height'] + 1 and G.edges[u, v]['capacity'] - G.edges[u, v]['preflow'] > 0:
                     push(u, v)
                     if G.nodes[u]['excess'] == 0:
@@ -124,7 +126,7 @@ def hao_orlin(G, s):
         for level in levels:
             if level.number_of_nodes() == 1:
                 node = level.get_only_node()
-                if all(G.nodes[node]['height'] > G.nodes[v]['height'] for v in G.neighbors(node)):
+                if all(G.nodes[node]['height'] > G.nodes[v]['height'] for v in G.neighbors(node) if G.edges[node, v]['preflow'] < G.edges[node, v]['capacity']):
                     return G.nodes[node]['height']
         
         return len(G.nodes) - 1
