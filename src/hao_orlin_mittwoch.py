@@ -33,7 +33,7 @@ def hao_orlin_directed(G, s):
         G.edges[u, v]['preflow'] += send
         G.edges[v, u]['preflow'] -= send
 
-        if v != s and v != t and G.nodes[v]['height'] < k:
+        if v != s and v != t and v!= t_prime and G.nodes[v]['height'] < k:
             ACTIVE_NODES.append(v)
 
 
@@ -55,9 +55,9 @@ def hao_orlin_directed(G, s):
         Discharges the excess flow from node u.
         """
         while G.nodes[u]['excess'] > 0:
+            if G.nodes[u]['height'] >= k:
+                break
             for v in G.neighbors(u):
-                if G.nodes[u]['height'] >= k:
-                    break
                 if G.nodes[u]['height'] == G.nodes[v]['height'] + 1 and G.edges[u, v]['capacity'] - G.edges[u, v]['preflow'] > 0:
                     push(u, v)
                     if G.nodes[u]['excess'] == 0:
@@ -70,7 +70,7 @@ def hao_orlin_directed(G, s):
         """
         Returns cut level of graph.
         """
-        height_dict = {node: G.nodes[node]['height'] for node in G.nodes}
+        height_dict = {node: G.nodes[node]['height'] for node in G.nodes if node != t}
         sorted_height_dict = dict(sorted(height_dict.items(), key=lambda item: item[1]))
 
         for node, height in sorted_height_dict.items():
@@ -86,7 +86,7 @@ def hao_orlin_directed(G, s):
         """
         Returns the cut value of the graph.
         """
-        return sum(G.edges[u, v]['capacity'] for u in S for v in G.neighbors(u) if v not in S)
+        return sum(G.edges[u, v]['capacity'] for u in S for v in G.neighbors(u) if v not in S) if S != V else math.inf
 
 
 
@@ -96,6 +96,7 @@ def hao_orlin_directed(G, s):
     n = len(V)
     k = n - 1
     t = list(V - X)[0]
+    t_prime = None
     min_cut_value = math.inf
     cut = set()
 
@@ -104,10 +105,10 @@ def hao_orlin_directed(G, s):
 
 
     while X != V:
-        print('running', cut)
+
+        G.nodes[t]['height'] = 0
 
         while ACTIVE_NODES: # TODO: ACTIVE NODES may be empty at some point
-            print(ACTIVE_NODES)
             u = ACTIVE_NODES.pop()
             discharge(u)
 
@@ -115,6 +116,8 @@ def hao_orlin_directed(G, s):
         S = set([i for i in V if G.nodes[i]['height'] >= k])
 
         current_cut_value = get_cut_value(S)
+        print(S)
+        print(current_cut_value)
         if current_cut_value < min_cut_value:
             min_cut_value = current_cut_value
             cut = S
@@ -123,8 +126,10 @@ def hao_orlin_directed(G, s):
         t_prime = min((v for v in V if v not in X), key=lambda v: G.nodes[v]['height']) if V != X else None
 
         G.nodes[t]['height'] = n
+        G.nodes[t]['excess'] = math.inf
         for v in G.neighbors(t):
             push(t, v)
+        
 
         t = t_prime
 
@@ -138,11 +143,20 @@ def hao_orlin(G, s):
 
 if __name__ == '__main__':
     G = nx.Graph()
-    G.add_edge(1, 2, capacity=1)
-    G.add_edge(2, 3, capacity=4)
-    G.add_edge(3, 4, capacity=2)
-    G.add_edge(4, 1, capacity=5)
-    G.add_edge(2, 4, capacity=3)
+    G.add_edge("a", "b", capacity=6)
+    G.add_edge("a", "c", capacity=2)
+    G.add_edge("c", "d", capacity=1)
+    G.add_edge("c", "e", capacity=7)
+    G.add_edge("c", "f", capacity=9)
+    G.add_edge("a", "d", capacity=3)
 
-    min_cut = hao_orlin(G, 1)
+    G2 = nx.Graph()
+    G2.add_edge(1, 2, capacity=6)
+    G2.add_edge(1, 3, capacity=2)
+    G2.add_edge(3, 4, capacity=1)
+    G2.add_edge(3, 5, capacity=7)
+    G2.add_edge(3, 6, capacity=9)
+    G2.add_edge(1, 4, capacity=3)
+
+    min_cut = hao_orlin(G, "a")
     print(min_cut)

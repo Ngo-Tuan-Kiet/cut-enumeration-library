@@ -3,7 +3,7 @@ import networkx as nx
 from networkx.algorithms.flow import minimum_cut
 import src.push_relabel as pr
 import src.varizani_yannakakis as vy
-import src.hao_orlin_maybe as ho
+import src.hao_orlin_mittwoch as ho
 
 @pytest.mark.parametrize('s, t', [
     (1, 2),
