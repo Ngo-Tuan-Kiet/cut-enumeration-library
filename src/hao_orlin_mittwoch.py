@@ -116,8 +116,6 @@ def hao_orlin_directed(G, s):
         S = set([i for i in V if G.nodes[i]['height'] >= k])
 
         current_cut_value = get_cut_value(S)
-        print(S)
-        print(current_cut_value)
         if current_cut_value < min_cut_value:
             min_cut_value = current_cut_value
             cut = S
@@ -158,5 +156,9 @@ if __name__ == '__main__':
     G2.add_edge(3, 6, capacity=9)
     G2.add_edge(1, 4, capacity=3)
 
-    min_cut = hao_orlin(G, "a")
+    G3 = nx.read_graphml('data/example_molecules/0.graphml')
+    for edge in G3.edges:
+        G3.edges[edge]['capacity'] = G3.edges[edge]['order']
+
+    min_cut = hao_orlin(G, 'a')
     print(min_cut)
