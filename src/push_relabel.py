@@ -4,7 +4,7 @@ import time
 import cProfile
 from icecream import ic
 from collections import Counter
-
+import matplotlib.pyplot as plt
 
 def push_relabel_directed(G, s, t):
     """
@@ -97,6 +97,22 @@ def push_relabel_directed(G, s, t):
 
     # Discharge active nodes
     while ACTIVE_NODES:
+        pos = nx.spring_layout(G) 
+        heights = nx.get_node_attributes(G, 'height')
+        excesses = nx.get_node_attributes(G, 'excess')
+
+        labels = {}
+        for node in G.nodes:
+            labels[node] = f"h: {heights.get(node, 'N/A')}, e: {excesses.get(node, 'N/A')}"
+
+        nx.draw_networkx_nodes(G, pos)
+        nx.draw_networkx_labels(G, pos, labels=labels)
+        curved_edges = [edge for edge in G.edges() if reversed(edge) in G.edges()]
+        nx.draw_networkx_edges(G, pos, edgelist=curved_edges, connectionstyle=f'arc3, rad = {0.15}')
+        edge_labels = {(u, v): f'{G.edges[u, v]["preflow"]}/{G.edges[u, v]["capacity"]}' for u, v in G.edges}
+        nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels, label_pos=0.3)
+        plt.show()
+
         u = ACTIVE_NODES.pop()
         discharge(u)
 
