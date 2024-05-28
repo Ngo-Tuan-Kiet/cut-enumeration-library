@@ -1,9 +1,5 @@
 import networkx as nx
 import math
-import time
-import cProfile
-from icecream import ic
-from collections import Counter
 
 
 def push_relabel_directed(G, s, t):
