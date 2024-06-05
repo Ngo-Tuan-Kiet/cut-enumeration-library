@@ -247,7 +247,10 @@ if __name__ == '__main__':
     G2.add_edge(2, 3, capacity=2)
     G2.add_edge(3, 1, capacity=3)
 
-    print(varizani_yannakakis(G))
+    for edge in G.edges():
+        print(edge)
+
+    #print(varizani_yannakakis(G))
 
     # G = collapse_graph(G, '001')
     # pos = nx.spring_layout(G)
