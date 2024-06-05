@@ -257,7 +257,7 @@ def greedy_varizani_yannakakis_directed(G: nx.DiGraph) -> list[Cut]:
     Combination of the Varizani-Yannakakis algorithm and the greedy algorithm for computing a cut basis of the graph G.
     """
     cut_basis = []
-    matrix = []
+    edge_vectors = []
 
     # Calculate the global min cut of the graph and get necessary data
     min_cut_value, min_cut_partition = global_min_cut(G)
@@ -276,11 +276,15 @@ def greedy_varizani_yannakakis_directed(G: nx.DiGraph) -> list[Cut]:
         # Check the curerent cut for dependency
         current_edge_partition = cb.cut_partition_to_edge_partition(G, current_cut.st_partition)
         current_edge_vector = cb.edge_partition_to_vector(G, current_edge_partition)
-        matrix.append([int(bit) for bit in current_edge_vector])
+        edge_vectors.append(current_edge_vector)
+        cut_basis.append(current_cut)
+        matrix = cb.edge_vectors_to_matrix(edge_vectors)
+        for line in matrix:
+            print(line)
+        print()
         if fg.has_dependent_rows(matrix):
-            matrix.pop()
-        else:
-            cut_basis.append(current_cut)
+            edge_vectors.pop()
+            cut_basis.pop()
 
         # If the cut basis is complete, return it
         if len(cut_basis) == G.number_of_nodes() - 1:
@@ -310,14 +314,14 @@ def varizani_yannakakis(G: nx.DiGraph | nx.Graph, greedy=False) -> list[Cut]:
 
 
 if __name__ == '__main__':
-    G = nx.read_graphml('data/example_molecules/150.graphml')
+    G = nx.read_graphml('data/example_molecules/89.graphml')
 
     # Replace attribute 'order' with 'capacity' for all edges
     for edge in G.edges:
         G[edge[0]][edge[1]]['capacity'] = G[edge[0]][edge[1]]['order']
         del G[edge[0]][edge[1]]['order']
 
-    complete_cut_set = (varizani_yannakakis(G))
+    complete_cut_set = (varizani_yannakakis(G, greedy=True))
 
     # G = nx.DiGraph()
     # G.add_edge(1, 2, capacity=10)

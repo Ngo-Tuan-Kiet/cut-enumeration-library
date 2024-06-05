@@ -54,11 +54,14 @@ if __name__ == '__main__':
         G[edge[0]][edge[1]]['capacity'] = G[edge[0]][edge[1]]['order']
         del G[edge[0]][edge[1]]['order']
 
-    cuts = vy.varizani_yannakakis(G)
+    # cuts = vy.varizani_yannakakis(G)
 
-    best_cut = cut_partition_to_edge_partition(G, cuts[0].st_partition)
-    second_best_cut = cut_partition_to_edge_partition(G, cuts[1].st_partition)
+    #best_cut = cut_partition_to_edge_partition(G, cuts[0].st_partition)
+    #second_best_cut = cut_partition_to_edge_partition(G, cuts[1].st_partition)
 
-    vectors = (canonical_greedy_cut_basis(G))
+    vectors = (canonical_greedy_cut_basis(G.to_directed()))
     for vector in vectors:
         print(vector)
+
+    for edge in G.to_directed().edges():
+        print(edge)
