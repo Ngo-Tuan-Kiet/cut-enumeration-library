@@ -105,12 +105,11 @@ def hao_orlin_directed(G, s):
     cut = set()
 
     initialize()
-    print("t")
-    print(t)
+    
 
     while X != V:
-        # print("k:")
-        # print(k)
+        print("t")
+        print(t)
         while ACTIVE_NODES:
             print(ACTIVE_NODES)  # TODO: ACTIVE NODES may be empty at some point
             u = ACTIVE_NODES.pop(0)
@@ -136,6 +135,7 @@ def hao_orlin_directed(G, s):
 
         X.add(t)
         G.nodes[t]['height'] = n
+        G.nodes[t]['excess'] = math.inf
         for v in G.neighbors(t):
             push(t, v) #hier tun wir dann ja auch was in active nodes, wollen wir das hier?
         print("Active nodes:")
