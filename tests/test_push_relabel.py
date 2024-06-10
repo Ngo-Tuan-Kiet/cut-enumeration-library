@@ -3,7 +3,7 @@ import networkx as nx
 from networkx.algorithms.flow import minimum_cut
 import src.push_relabel as pr
 import src.varizani_yannakakis as vy
-import src.hao_orlin_mittwoch as ho
+import src.hao_orlin_diff as ho
 
 @pytest.mark.parametrize('s, t', [
     (1, 2),
@@ -53,34 +53,43 @@ def test_push_relabel_complex_graph(complex_graph, s, t):
     assert min_cut == nx_min_cut
 
 
-@pytest.mark.parametrize('s', [1, 2, 3, 4])
-def test_hao_orlin_star_graph(star_graph, s):
-    G = star_graph
-    G2 = G.copy()
-
-    min_cut = ho.hao_orlin(G, s)[0]
-
-    bf_min_cut = vy.minimum_s_cut(G2, s)[0]
-    assert min_cut == bf_min_cut
-
-
-@pytest.mark.parametrize('s', [1, 2, 3, 4])
-def test_hao_orlin_complex_graph(complex_graph, s):
-    G = complex_graph
-    G2 = G.copy()
-
-    min_cut = ho.hao_orlin(G, s)[0]
-
-    bf_min_cut = vy.minimum_s_cut(G2, s)[0]
-    assert min_cut == bf_min_cut
-
-
-@pytest.mark.parametrize('s', ['a', 'b', 'c', 'd', 'e', 'f'])
-def test_hao_orlin_networkx_example_weighted_graph(networkx_example_weighted_graph, s):
+@pytest.mark.parametrize('s, t', [
+    ('a', 'b'),
+    ('a', 'c'),
+    ('a', 'd'),
+    ('a', 'e'),
+    ('a', 'f'),
+    ('b', 'a'),
+    ('b', 'c'),
+    ('b', 'd'),
+    ('b', 'e'),
+    ('b', 'f'),
+    ('c', 'a'),
+    ('c', 'b'),
+    ('c', 'd'),
+    ('c', 'e'),
+    ('c', 'f'),
+    ('d', 'a'),
+    ('d', 'b'),
+    ('d', 'c'),
+    ('d', 'e'),
+    ('d', 'f'),
+    ('e', 'a'),
+    ('e', 'b'),
+    ('e', 'c'),
+    ('e', 'd'),
+    ('e', 'f'),
+    ('f', 'a'),
+    ('f', 'b'),
+    ('f', 'c'),
+    ('f', 'd'),
+    ('f', 'e')
+])
+def test_push_relabel_networkx_example_weighted_graph(networkx_example_weighted_graph, s, t):
     G = networkx_example_weighted_graph
     G2 = G.copy()
 
-    min_cut = ho.hao_orlin(G, s)[0]
+    min_cut = pr.push_relabel(G, s, t)[0]
 
-    bf_min_cut = vy.minimum_s_cut(G2, s)[0]
-    assert min_cut == bf_min_cut
+    nx_min_cut = minimum_cut(G2, s, t)[0]
+    assert min_cut == nx_min_cut

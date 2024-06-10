@@ -39,6 +39,7 @@ def push_relabel_directed(G, s, t):
         G.edges[u, v]['preflow'] += send
         G.edges[v, u]['preflow'] -= send
 
+
         if v != s and v != t:
             ACTIVE_NODES.append(v)
 
@@ -56,18 +57,15 @@ def push_relabel_directed(G, s, t):
         G.nodes[u]['height'] = min_height + 1
 
 
-    def discharge(u):
+    def single_push_relabel_operation(u):
         """
-        Discharges the excess flow from node u.
+        Single push-relabel operation on node u.
         """
-        while G.nodes[u]['excess'] > 0:
-            for v in G.neighbors(u):
-                if G.nodes[u]['height'] == G.nodes[v]['height'] + 1 and G.edges[u, v]['capacity'] - G.edges[u, v]['preflow'] > 0:
-                    push(u, v)
-                    if G.nodes[u]['excess'] == 0:
-                        break
-                else:
-                    relabel(u)
+        for v in G.neighbors(u):
+            if G.nodes[u]['height'] == G.nodes[v]['height'] + 1 and G.edges[u, v]['capacity'] - G.edges[u, v]['preflow'] > 0:
+                push(u, v)
+                return
+        relabel(u)
 
 
     def get_saturated_edges():
@@ -98,7 +96,9 @@ def push_relabel_directed(G, s, t):
     # Discharge active nodes
     while ACTIVE_NODES:
         u = ACTIVE_NODES.pop()
-        discharge(u)
+        single_push_relabel_operation(u)
+        if G.nodes[u]['excess'] > 0:
+            ACTIVE_NODES.append(u)
 
     # Find S-T partition from saturated edges
     saturated_edges = get_saturated_edges()
@@ -123,11 +123,16 @@ if __name__ == '__main__':
         del G[edge[0]][edge[1]]['order']
 
     G = nx.Graph()
-    G.add_edge(1, 2, capacity=1)
-    G.add_edge(2, 3, capacity=4)
-    G.add_edge(3, 4, capacity=2)
-    G.add_edge(4, 1, capacity=5)
-    G.add_edge(2, 4, capacity=3)
+    mapping = {'a': 1, 'b': 2, 'c': 3, 'd': 4, 'e': 5, 'f': 6}
+
+    G.add_edge("a", "b", capacity=6)
+    G.add_edge("a", "c", capacity=2)
+    G.add_edge("c", "d", capacity=1)
+    G.add_edge("c", "e", capacity=7)
+    G.add_edge("c", "f", capacity=9)
+    G.add_edge("a", "d", capacity=3)
+
+    print(push_relabel(G, 'e', 'a'))
 
     # import matplotlib.pyplot as plt
 
