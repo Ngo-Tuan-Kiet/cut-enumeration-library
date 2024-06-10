@@ -2,7 +2,6 @@ import networkx as nx
 import math
 import time
 import cProfile
-from icecream import ic
 from collections import Counter
 import matplotlib.pyplot as plt
 
