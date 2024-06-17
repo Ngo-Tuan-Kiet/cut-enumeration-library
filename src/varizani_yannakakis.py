@@ -321,8 +321,21 @@ if __name__ == '__main__':
         G[edge[0]][edge[1]]['capacity'] = G[edge[0]][edge[1]]['order']
         del G[edge[0]][edge[1]]['order']
 
-    complete_cut_set = (varizani_yannakakis(G, greedy=True))
+    # complete_cut_set = (varizani_yannakakis(G))
 
+    G = nx.Graph()
+    mapping = {'A': 2, 'B': 3, 'C': 6, 'D': 5, 'E': 4, 'F': 1}
+    G.add_edge(mapping['A'], mapping['B'], capacity=5)
+    G.add_edge(mapping['A'], mapping['C'], capacity=2)
+    G.add_edge(mapping['B'], mapping['C'], capacity=1)
+    G.add_edge(mapping['B'], mapping['E'], capacity=3)
+    G.add_edge(mapping['C'], mapping['D'], capacity=8)
+    G.add_edge(mapping['E'], mapping['F'], capacity=4)
+    G.add_edge(mapping['D'], mapping['F'], capacity=2)
+    G.add_edge(mapping['B'], mapping['D'], capacity=4)
+    G.add_edge(mapping['E'], mapping['D'], capacity=4)
+
+    print(minimum_s_cut(G, 4))
     # G = nx.DiGraph()
     # G.add_edge(1, 2, capacity=10)
     # G.add_edge(2, 1, capacity=10)
