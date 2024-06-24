@@ -127,7 +127,7 @@ def hao_orlin_directed(G, s):
     D_max = 0
     awake_nodes = N - S
     best_value = math.inf
-
+    yeh_list = []
 
     # Main loop
     initialize()
@@ -143,13 +143,15 @@ def hao_orlin_directed(G, s):
 
         cut_value = calculate_cut_value(awake_nodes)
 
-        if cut_value < best_value:
-            best_value = cut_value
-            best_cut = (N - awake_nodes, awake_nodes.copy())
+        # if cut_value < best_value:
+        #     best_value = cut_value
+        #     best_cut = (N - awake_nodes, awake_nodes.copy())
+
+        yeh_list.append = {'i': t_prime, 'P': (S.copy(), N - S),'cut_value': cut_value, 'min_cut': (N - awake_nodes, awake_nodes.copy())}
 
         select_new_sink()
 
-    return (best_value, best_cut)
+    return yeh_list
 
 
 def hao_orlin(G, s):

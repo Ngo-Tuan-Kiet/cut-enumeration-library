@@ -1,5 +1,6 @@
 import networkx as nx
 from hao_orlin_diff import hao_orlin
+from varizani_yannakakis import contract_nodes_with_edge_addition
 from queue import PriorityQueue
 from typing import Union, Tuple
 
@@ -10,53 +11,70 @@ type ST_partition = Tuple[NodeSet, NodeSet]
 
 
 class Partition:
-    def __init__(self, value, data):
-        self.value: Cut_value = value
+    def __init__(self, data):
+        self.value: Cut_value = data['cut_value']
         self.P = data['P']
-        self.cut = data['cut']
+        self.min_cut = data['min_cut']
 
     def __lt__(self, other):
         return self.value < other.value
 
 
 def yeh_directed(G):
-    s = list(G.nodes)[0]
     
 
     def basic_partition():
-        return hao_orlin(G, s)
+        basic_partition = set()
 
+        yeh_list = hao_orlin(G, s)
+        for partition_dict in yeh_list:
+            basic_partition.add(Partition(partition_dict))
 
-    def get_cut_value(S):
-        """
-        Returns the cut value of the graph.
-        """
-        return sum(G.edges[u, v]['capacity'] for u in S for v in G.neighbors(u) if v not in S)
+        return basic_partition
     
 
-    def extract_min_cut(partition):
-        G_sub = G.subgraph(partition.cut[0])
-        print(partition.P)
-        print(G_sub.nodes)
-        s = list(G_sub.nodes)[0]
-        return hao_orlin(G_sub, s)
+    def collapse_graph(partition):
+        S = partition.P[0]
+        T = partition.P[1]
+
+        # Collapse the nodes in S and T
+        G_collapsed = G.copy()
+        if len(S) > 0:
+            G_collapsed.add_node('S')
+            for node in S:
+                G_collapsed = contract_nodes_with_edge_addition(G_collapsed, 'S', node, self_loops=False)
+        if len(T) > 0:
+            G_collapsed.add_node('T')
+            for node in T:
+                G_collapsed = contract_nodes_with_edge_addition(G_collapsed, 'T', node, self_loops=False)
+            
+        return G_collapsed
+    
+
+    def extract_min_partition(partition):
+        extract_min_partition = set()
+
+        G_collapsed = collapse_graph(partition)
+        G_only_S = G_collapsed.remove_node('T')
+        G_only_T = G_collapsed.remove_node('S')
+
+        s = list(G_only_S.nodes)[0]
+        yeh_list = hao_orlin(G_only_S, s)
 
 
     # Main loop
+    enumerated_cuts = []
+    s = list(G.nodes)[0] # Select arbitrary source node
 
     queue = PriorityQueue()
-    for partition in basic_partition():
-        queue.put(Partition(partition[0], partition[1]))
+    basic_part = basic_partition()
+    for partition in basic_part:
+        queue.put(partition)
 
-    enumerated_cuts = []
-    
     while not queue.empty():
         partition = queue.get()
-        enumerated_cuts.append(partition.cut)
-        print(partition.value)
-        partition_list = extract_min_cut(partition)
-        for partition in partition_list:
-            queue.put(Partition(get_cut_value(partition[1]['cut'][0]), partition[1]))
+        enumerated_cuts.append(partition.min_cut)
+        extract_min_partition(partition)
         
     return enumerated_cuts
 
