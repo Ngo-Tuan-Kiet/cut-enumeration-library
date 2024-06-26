@@ -1,5 +1,6 @@
 import networkx as nx
-from hao_orlin_original import hao_orlin
+import math
+from hao_orlin_diff import Partition, hao_orlin
 from queue import PriorityQueue
 from typing import Union, Tuple
 
@@ -9,30 +10,10 @@ type Cut_value = Union[int, float]
 type ST_partition = Tuple[NodeSet, NodeSet]
 
 
-class Partition:
-    def __init__(self, data):
-        self.value: Cut_value = data['cut_value']
-        self.P = data['P']
-        self.min_cut = data['min_cut']
-
-    def __lt__(self, other):
-        return self.value < other.value
-
-
 def yeh_directed(G):
     
 
-    def basic_partition():
-        basic_partition = set()
-
-        yeh_list = hao_orlin(G, s)
-        for partition_dict in yeh_list:
-            basic_partition.add(Partition(partition_dict))
-
-        return basic_partition
-    
-
-    def contract_nodes_with_edge_addition(G: nx.DiGraph, u: int | str, v: int | str, self_loops=True, copy=True) -> nx.DiGraph:
+    def contract_nodes_with_edge_addition(G: nx.DiGraph, u: int | str, v: int | str, self_loops=False, copy=True) -> nx.DiGraph:
         """
         Given a directed graph G and two nodes u and v, contract the nodes u and v and add up the edges to shared neighbors. (This function applies contracted_notes() from networkx with some custom logic, adding up all the edges to shared neighbors of u and v.)
         """
@@ -52,65 +33,72 @@ def yeh_directed(G):
         return G_collapsed
     
 
-    def collapse_graph(partition):
+    def basic_partition():
+        for partition in hao_orlin(G, s):
+            print(partition.P, partition.min_cut, partition.value)
+            print('---')
+            queue.put(partition)
+        queue.put(Partition(math.inf, {'P': (set(G.nodes), set()), 'cut': (set(G.nodes), set())}))
+
+
+    def extract_min_partition(partition: Partition):
         S = partition.P[0]
+        S_star = partition.min_cut[0]
         T = partition.P[1]
+        T_star = partition.min_cut[1]
 
-        # Collapse the nodes in S and T
-        G_collapsed = G.copy()
-        if len(S) > 0:
-            G_collapsed.add_node('S')
+        q = len(S_star - S)
+        r = len(T_star - T)
+
+        print(f'extract_min_partition with P = {partition.P}, cut = {partition.min_cut}')
+        if q != 0: # Do phase 1
+            G_phase1 = G.copy()
+            G_phase1.add_node('s')
             for node in S:
-                G_collapsed = contract_nodes_with_edge_addition(G_collapsed, 'S', node, self_loops=False)
-        if len(T) > 0:
-            G_collapsed.add_node('T')
-            for node in T:
-                G_collapsed = contract_nodes_with_edge_addition(G_collapsed, 'T', node, self_loops=False)
+                G_phase1 = contract_nodes_with_edge_addition(G_phase1, 's', node)
+            for node in T_star:
+                G_phase1.remove_node(node)
+
+            phase1_list = hao_orlin(G_phase1, 's')
             
-        return G_collapsed
-    
+            for item in phase1_list:
+                item.P = (item.P[0]-set('s') | S, item.P[1] | T_star)
+                item.min_cut = (item.min_cut[0]-set('s') | S, item.min_cut[1] | T_star)
+                item.value = sum([G.edges[u, v]['capacity'] for u in item.min_cut[0] for v in item.min_cut[1] if (u, v) in G.edges])
+                item.value = item.value if item.value != 0 else math.inf
 
-    def extract_min_partition(partition):
-        ### Phase 1
-        G_collapsed = collapse_graph(partition)
+                #print(f'Phase 1 with {}')
+                print(item.P, item.min_cut, item.value)
+                queue.put(item)
 
-        # Compute max flow
-        flow_value, flow_dict = nx.maximum_flow(G_collapsed, 'S', 'T', capacity='capacity')
-        
-        # Compute the residual graph
-        R = nx.DiGraph()
-        for u in flow_dict:
-            for v in flow_dict[u]:
-                R.add_edge(u, v, capacity=G_collapsed[u][v]['capacity'] - flow_dict[u][v])
-        
-        # Remove T from the residual graph
-        H_without_T = R.copy()
-        H_without_T.remove_node('T')
-        
-        # Determine Si-si cuts
-        yeh_list = hao_orlin(H_without_T, 'S')
+            # queue.put(Partition(partition.value, {'P': (S_star, set()), 'cut': partition.min_cut}))
 
-        # Compute m(Si,{T,si})
-        for partition_dict in yeh_list:
-            partition_dict['cut_value'] += sum(R[u][v]['capacity'] for u in partition_dict['P'][0] for v in partition_dict['P'][1])
-            partition_dict['min_cut'][1].update(partition.P[1])
-            queue.put(Partition(partition_dict))
+        if r != 0: # Do phase 2
+            G_phase2 = G.copy()
+            G_phase2.reverse()
+            G_phase2.add_node('t')
+            for node in T:
+                print(f'contracting {node}')
+                G_phase2 = contract_nodes_with_edge_addition(G_phase2, 't', node)
+            for node in S_star:
+                G_phase2.remove_node(node)
 
-        ### Phase 2
+            phase2_list = hao_orlin(G_phase2, 't')
 
-        # Obtain graph H by removing S from R and reversing each edge
-        H_without_S = R.copy()
-        H_without_S.remove_node('S')
-        H_without_S = H_without_S.reverse()
+            for item in phase2_list:
+                print(f'hao orlin value: {item.value} with P = {item.P}, cut = {item.min_cut}')
+                print(f'S_star = {S_star}')
+                print(f'S = {item.min_cut[0]}')
+                print(f'T = {item.min_cut[1]}')
+                item.P = (item.P[1] | S_star, item.P[0]-set('t') | T)
+                item.min_cut = (item.min_cut[1] | S_star, item.min_cut[0]-set('t') | T)
+                item.value = sum([G.edges[u, v]['capacity'] for u in item.min_cut[0] for v in item.min_cut[1] if (u, v) in G.edges])
+                item.value = item.value if item.value != 0 else math.inf
 
-        # Determine Ti-ti cuts
-        yeh_list = hao_orlin(H_without_S, 'T')
+                print(item.P, item.min_cut, item.value)
+                queue.put(item)
 
-        # Compute m({S,ti},Ti)
-        for partition_dict in yeh_list:
-            partition_dict['cut_value'] += sum(R[u][v]['capacity'] for u in partition.P[0] for v in partition_dict['P'][1])
-            partition_dict['min_cut'][0].update(partition.P[0])
-            queue.put(Partition(partition_dict))
+            # queue.put(Partition(partition.value, {'P': (S_star, T_star), 'cut': partition.min_cut}))
 
 
     # Main loop
@@ -118,11 +106,11 @@ def yeh_directed(G):
     s = list(G.nodes)[0] # Select arbitrary source node
 
     queue = PriorityQueue()
-    for partition in basic_partition():
-        queue.put(partition)
+    basic_partition()
 
     while not queue.empty():
         partition = queue.get()
+        #print(partition.value, partition.min_cut, partition.P)
         enumerated_cuts.append(partition)
         extract_min_partition(partition)
         
@@ -135,10 +123,13 @@ def yeh(G):
 
 if __name__ == '__main__':
     G = nx.Graph()
-    G.add_edge(1, 2, capacity=10)
-    G.add_edge(2, 3, capacity=10)
-    G.add_edge(2, 4, capacity=1)
+    G.add_edge(1, 2, capacity=1)
+    G.add_edge(2, 3, capacity=4)
+    G.add_edge(3, 4, capacity=2)
+    G.add_edge(4, 1, capacity=5)
+    G.add_edge(2, 4, capacity=3)
 
     cuts = yeh(G)
+
     for cut in cuts:
-        print(cut.value, cut.min_cut)
+        print(cut.value, cut.min_cut, cut.P)

@@ -1,6 +1,22 @@
 import networkx as nx
 import math
+from typing import Union
 
+
+type Cut_value = Union[int, float]
+
+
+class Partition:
+    def __init__(self, value, data):
+        self.value: Cut_value = value
+        self.P = data['P']
+        self.min_cut = data['cut']
+
+    def __lt__(self, other):
+        return self.value < other.value
+    
+    def __str__(self):
+        return f'Partition with value {self.value}'
 
 def hao_orlin_directed(G, s):
 
@@ -166,10 +182,10 @@ def hao_orlin_directed(G, s):
         current_cut_value = G.nodes[t]['excess'] # aber der cut ist dann falsch???
         current_cut_value = get_cut_value(S)
         min_cut_value = current_cut_value
-        cut = (S, V - S)
+        cut = (S.copy(), V - S)
         P = (X.copy(), {t})
 
-        yeh_list.append((min_cut_value, {'P': P, 'cut': cut}))
+        yeh_list.append(Partition(min_cut_value, {'P': P, 'cut': cut}))
 
         X.add(t)
         G.nodes[t]['height'] = n
