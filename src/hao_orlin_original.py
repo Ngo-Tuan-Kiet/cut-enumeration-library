@@ -117,6 +117,10 @@ def hao_orlin_directed(G, s):
         return i in awake_nodes and j in awake_nodes and G.edges[i, j]['capacity'] - G.edges[i, j]['flow'] > 0 and G.nodes[i]['height'] == G.nodes[j]['height'] + 1
 
     
+    # Return if the graph has only one node
+    if len(G.nodes) == 1:
+        return []
+    
     # Initialize variables
     N = set(G.nodes)
     n = len(N)
@@ -147,7 +151,7 @@ def hao_orlin_directed(G, s):
         #     best_value = cut_value
         #     best_cut = (N - awake_nodes, awake_nodes.copy())
 
-        yeh_list.append = {'i': t_prime, 'P': (S.copy(), N - S),'cut_value': cut_value, 'min_cut': (N - awake_nodes, awake_nodes.copy())}
+        yeh_list.append({'i': t_prime, 'P': (S.copy(), N - S), 'cut_value': cut_value, 'min_cut': (N - awake_nodes, awake_nodes.copy())})
 
         select_new_sink()
 
