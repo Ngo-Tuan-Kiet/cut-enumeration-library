@@ -232,6 +232,13 @@ def varizani_yannakakis(G: nx.DiGraph):
 
 
 if __name__ == '__main__':
+    G = nx.Graph()
+    G.add_edge(1, 2, capacity=1)
+    G.add_edge(2, 3, capacity=4)
+    G.add_edge(3, 4, capacity=2)
+    G.add_edge(4, 1, capacity=5)
+    G.add_edge(2, 4, capacity=3)
+
     G = nx.DiGraph()
     G.add_edge(1, 2, capacity=10)
     G.add_edge(2, 1, capacity=10)
