@@ -3,6 +3,23 @@ This file contains the implementation of the Hao-Orlin algorithm as described in
 """
 import networkx as nx
 import math
+from typing import Union
+
+
+type Cut_value = Union[int, float]
+
+
+class Partition:
+    def __init__(self, data):
+        self.value: Cut_value = data['value']
+        self.P = data['P']
+        self.min_cut = data['cut']
+
+    def __lt__(self, other):
+        return self.value < other.value
+    
+    def __str__(self):
+        return f'Partition with value {self.value}'
 
 
 def hao_orlin_directed(G, s):
@@ -117,10 +134,9 @@ def hao_orlin_directed(G, s):
         return i in awake_nodes and j in awake_nodes and G.edges[i, j]['capacity'] - G.edges[i, j]['flow'] > 0 and G.nodes[i]['height'] == G.nodes[j]['height'] + 1
 
     
-    # Return if the graph has only one node
     if len(G.nodes) == 1:
         return []
-    
+
     # Initialize variables
     N = set(G.nodes)
     n = len(N)
@@ -151,7 +167,7 @@ def hao_orlin_directed(G, s):
         #     best_value = cut_value
         #     best_cut = (N - awake_nodes, awake_nodes.copy())
 
-        yeh_list.append({'i': t_prime, 'P': (S.copy(), N - S), 'cut_value': cut_value, 'min_cut': (N - awake_nodes, awake_nodes.copy())})
+        yeh_list.append(Partition({'value': cut_value, 'P': (S.copy(), {t_prime}), 'cut': (N - awake_nodes, awake_nodes.copy())}))
 
         select_new_sink()
 
