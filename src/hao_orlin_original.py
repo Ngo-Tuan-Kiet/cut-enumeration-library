@@ -162,12 +162,15 @@ def hao_orlin_directed(G, s):
                 relabel(i)
 
         cut_value = calculate_cut_value(awake_nodes)
+        P = (S.copy(), {t_prime})
+        cut = (N - awake_nodes, awake_nodes.copy())
 
         # if cut_value < best_value:
         #     best_value = cut_value
         #     best_cut = (N - awake_nodes, awake_nodes.copy())
 
-        yeh_list.append(Partition({'value': cut_value, 'P': (S.copy(), {t_prime}), 'cut': (N - awake_nodes, awake_nodes.copy())}))
+        yeh_list.append(Partition({'value': cut_value, 'P': P, 'cut': cut}))
+        print(f'Hao-Orlin: {P} with cut {cut} and value {cut_value}')
 
         select_new_sink()
 

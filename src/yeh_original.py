@@ -49,9 +49,10 @@ def yeh_directed(G):
         """
         This function extracts the minimum partition from the given partition.
         """
-        print(partition.P, partition.min_cut, partition.value)
+        print(f'Extracting min partition from {partition.P}')
         # Define variables, calculate need of phases
         S, T = partition.P
+        print(f'S = {S}, T = {T}')
         S_prime, T_prime = partition.min_cut
         
         phase_1 = True if len(S_prime) > len(S) else False
@@ -62,11 +63,12 @@ def yeh_directed(G):
 
         # Phase 1
         if phase_1:
+            print('Phase 1')
             G_phase_1 = G.copy()
             # Contract the nodes in S, remove the nodes in T_prime
             G_phase_1.add_node('s')
             for node in S:
-                contract_nodes_with_edge_addition(G_phase_1, 's', node)
+                G_phase_1 = contract_nodes_with_edge_addition(G_phase_1, 's', node)
             G_phase_1.remove_nodes_from(T_prime)
 
             phase_1_partitions = hao_orlin(G_phase_1, 's')
@@ -78,12 +80,17 @@ def yeh_directed(G):
         
         # Phase 2
         if phase_2:
+            print('Phase 2')
             G_phase_2 = G.copy()
             # Contract the nodes in T, remove the nodes in S_prime
             G_phase_2.add_node('t')
             for node in T:
-                contract_nodes_with_edge_addition(G_phase_2, 't', node)
+                print(f'Contracting {node}')
+                print('Nodes before:', G_phase_2.nodes)
+                G_phase_2 = contract_nodes_with_edge_addition(G_phase_2, 't', node)
+                print('Nodes after:', G_phase_2.nodes)
             G_phase_2.remove_nodes_from(S_prime)
+            print('nodes:', G_phase_2.nodes)
 
             phase_2_partitions = hao_orlin(G_phase_2, 't')
 
@@ -92,6 +99,8 @@ def yeh_directed(G):
                 partition.min_cut = (partition.min_cut[1] | S_prime, (partition.min_cut[0] - set('t')) | T)
                 partition.value = sum([G.edges[u, v]['capacity'] for u in partition.min_cut[0] for v in partition.min_cut[1] if (u, v) in G.edges])
 
+        for partition in phase_1_partitions + phase_2_partitions:
+            print(f'Returning partition {partition.P} with cut {partition.min_cut} and value {partition.value}')
         return phase_1_partitions + phase_2_partitions
 
     
