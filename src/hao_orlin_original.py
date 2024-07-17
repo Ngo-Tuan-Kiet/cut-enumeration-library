@@ -14,6 +14,7 @@ class Partition:
         self.value: Cut_value = data['value']
         self.P = data['P']
         self.min_cut = data['cut']
+        self.residual_graph = data['residual_graph']
 
     def __lt__(self, other):
         return self.value < other.value
@@ -169,8 +170,10 @@ def hao_orlin_directed(G, s):
         #     best_value = cut_value
         #     best_cut = (N - awake_nodes, awake_nodes.copy())
 
-        yeh_list.append(Partition({'value': cut_value, 'P': P, 'cut': cut}))
+        yeh_list.append(Partition({'value': cut_value, 'P': P, 'cut': cut, 'residual_graph': G.copy()}))
         print(f'Hao-Orlin: {P} with cut {cut} and value {cut_value}')
+        for edge in G.edges:
+            print(f'Edge {edge} with flow {G.edges[edge[0], edge[1]]["flow"]}')
 
         select_new_sink()
 

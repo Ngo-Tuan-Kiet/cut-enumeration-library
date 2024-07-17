@@ -49,7 +49,7 @@ def yeh_directed(G):
         """
         This function extracts the minimum partition from the given partition.
         """
-        print(f'Extracting min partition from {partition.P}')
+        print(f'Extracting min partition from {partition.P} with min cut {partition.min_cut}, value {partition.value}, and residual graph nodes{list(partition.residual_graph.nodes)}')
         # Define variables, calculate need of phases
         S, T = partition.P
         print(f'S = {S}, T = {T}')
@@ -64,7 +64,7 @@ def yeh_directed(G):
         # Phase 1
         if phase_1:
             print('Phase 1')
-            G_phase_1 = G.copy()
+            G_phase_1 = partition.residual_graph.copy()
             # Contract the nodes in S, remove the nodes in T_prime
             G_phase_1.add_node('s')
             for node in S:
@@ -77,11 +77,12 @@ def yeh_directed(G):
                 partition.P = ((partition.P[0] - set('s')) | S, partition.P[1] | T)
                 partition.min_cut = ((partition.min_cut[0] - set('s')) | S, partition.min_cut[1] | T_prime)
                 partition.value = sum([G.edges[u, v]['capacity'] for u in partition.min_cut[0] for v in partition.min_cut[1] if (u, v) in G.edges])
+                # Reverse contraction on partition.residual_graph
         
         # Phase 2
         if phase_2:
             print('Phase 2')
-            G_phase_2 = G.copy()
+            G_phase_2 = partition.residual_graph.copy().reverse()
             # Contract the nodes in T, remove the nodes in S_prime
             G_phase_2.add_node('t')
             for node in T:
