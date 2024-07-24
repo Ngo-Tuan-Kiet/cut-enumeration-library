@@ -314,6 +314,21 @@ def varizani_yannakakis(G: nx.DiGraph | nx.Graph, greedy=False) -> list[Cut]:
 
 
 if __name__ == '__main__':
+    G = nx.Graph()
+    G.add_edge(1, 2, capacity=1)
+    G.add_edge(2, 3, capacity=4)
+    G.add_edge(3, 4, capacity=2)
+    G.add_edge(4, 1, capacity=5)
+    G.add_edge(2, 4, capacity=3)
+
+    cuts = varizani_yannakakis(G)
+    print('---')
+    for cut in cuts:
+        print(cut.value, cut.st_partition, cut.partition_vector)
+
+    exit()
+
+
     G = nx.read_graphml('data/example_molecules/89.graphml')
 
     # Replace attribute 'order' with 'capacity' for all edges
