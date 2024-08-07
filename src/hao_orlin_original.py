@@ -19,11 +19,14 @@ class Partition:
     def __lt__(self, other):
         return self.value < other.value
     
+    def __eq__(self, other):
+        return self.value == other.value and self.min_cut == other.min_cut
+
     def __str__(self):
         return f'Partition with value {self.value}'
 
 
-def hao_orlin_directed(G, s):
+def hao_orlin_directed(G, s, yeh=False):
     """
     This function implements the Hao-Orlin algorithm for directed graphs.
     """
@@ -143,6 +146,7 @@ def hao_orlin_directed(G, s):
     n = len(N)
     S = {s}
     t_prime = list(N - S)[0]
+    print(t_prime)
     dormant_nodes = [set() for _ in range(n)]
     dormant_nodes[0].add(s)
     D_max = 0
@@ -166,19 +170,20 @@ def hao_orlin_directed(G, s):
         P = (S.copy(), {t_prime})
         cut = (N - awake_nodes, awake_nodes.copy())
 
-        # if cut_value < best_value:
-        #     best_value = cut_value
-        #     best_cut = (N - awake_nodes, awake_nodes.copy())
-
-        yeh_list.append(Partition({'value': cut_value, 'P': P, 'cut': cut, 'residual_graph': G.copy()}))
-        print(f'Hao-Orlin: {P} with cut {cut} and value {cut_value}')
-        for edge in G.edges:
-            print(f'Edge {edge} with flow {G.edges[edge[0], edge[1]]["flow"]}')
-
+        if yeh == False:
+            if cut_value < best_value:
+                best_value = cut_value
+                best_cut = (N - awake_nodes, awake_nodes.copy())
+        else:
+            yeh_list.append(Partition({'value': cut_value, 'P': P, 'cut': cut, 'residual_graph': G.copy()}))
+        
         select_new_sink()
 
-    return yeh_list
+    if yeh == False:
+        return (best_value, best_cut)
+    else:
+        return yeh_list
 
 
-def hao_orlin(G, s):
-    return hao_orlin_directed(G, s) if G.is_directed() else hao_orlin_directed(G.to_directed(), s)
+def hao_orlin(G, s, yeh=False):
+    return hao_orlin_directed(G, s, yeh) if G.is_directed() else hao_orlin_directed(G.to_directed(), s, yeh)

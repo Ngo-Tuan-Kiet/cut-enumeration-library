@@ -103,6 +103,7 @@ def networkx_example_weighted_graph():
 
 
 @pytest.fixture()
+# https://transport-systems.imperial.ac.uk/tf/60008_21/n2_2_weighted_and_directed_graphs.html
 def icl_weighted_graph():
     G = nx.Graph()
 

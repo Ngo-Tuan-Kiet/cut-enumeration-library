@@ -2,7 +2,7 @@ import networkx as nx
 import math
 
 
-def push_relabel_directed(G, s, t):
+def push_relabel_directed(G, s, t, yeh=False):
     """
     Push-relabel algorithm for directed graphs.
     """
@@ -77,11 +77,12 @@ def push_relabel_directed(G, s, t):
         """
         Returns the S-T partition from the edge cuts.
         """
+        G_copy = G.copy()
         for u, v in edge_cuts:
-            G.remove_edge(u, v)
+            G_copy.remove_edge(u, v)
         
-        S = set([u for u in G.nodes if nx.has_path(G, s, u)])
-        T = set(G.nodes) - S
+        S = set([u for u in G_copy.nodes if nx.has_path(G_copy, s, u)])
+        T = set(G_copy.nodes) - S
 
         return (S, T)
 
@@ -99,16 +100,23 @@ def push_relabel_directed(G, s, t):
     # Find S-T partition from saturated edges
     saturated_edges = get_saturated_edges()
     S, T = edge_cuts_to_st_partition(saturated_edges)
-    cut_value = G.nodes[t]['excess'] 
+    cut_value = G.nodes[t]['excess']
+    
 
-    return (cut_value, (S, T))
+    if yeh == False:
+        return (cut_value, (S, T))
+    else:
+        for edge in saturated_edges:
+            G.remove_edge(edge[0], edge[1])
+            G.remove_edge(edge[1], edge[0])
+        return G
+    
 
-
-def push_relabel(G, s, t):
+def push_relabel(G, s, t, yeh=False):
     """
     Push-relabel wrapper for undirected graphs.
     """
-    return push_relabel_directed(G, s, t) if G.is_directed() else push_relabel_directed(G.to_directed(), s, t)
+    return push_relabel_directed(G, s, t, yeh) if G.is_directed() else push_relabel_directed(G.to_directed(), s, t, yeh)
 
 
 if __name__ == '__main__':
@@ -122,8 +130,10 @@ if __name__ == '__main__':
     G.add_edge(1, 2, capacity=1)
     G.add_edge(2, 3, capacity=4)
     G.add_edge(3, 4, capacity=2)
-    G.add_edge(4, 1, capacity=5)
+    G.add_edge(4, 1, capacity=6)
     G.add_edge(2, 4, capacity=3)
+
+    push_relabel(G, 1, 3)
 
     # import matplotlib.pyplot as plt
 
