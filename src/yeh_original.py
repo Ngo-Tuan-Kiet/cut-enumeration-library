@@ -43,7 +43,6 @@ def yeh_directed(G):
         This function computes the basic partition of the graph.
         """
         s = list(G.nodes)[0]
-        print(f'Basic partition with s={s}')
         return hao_orlin(G.copy(), s, yeh=True)
 
 
@@ -51,12 +50,9 @@ def yeh_directed(G):
         """
         This function extracts the minimum partition from the given partition.
         """
-        print(f'Extracting min partition from {partition.P}, {partition.min_cut}, {partition.value}')
         # Define variables, calculate need of phases
         S, T = partition.P
         S_prime, T_prime = partition.min_cut
-        # print(S_prime)
-        # print(S)
         
         phase_1 = True if len(S_prime) > len(S) else False
         phase_2 = True if len(T_prime) > len(T) else False
@@ -83,16 +79,11 @@ def yeh_directed(G):
             phase_1_partitions = hao_orlin(G_phase_1.copy(), 's', yeh=True)
 
             for partition in phase_1_partitions:
-                print(f'post-Hao-Orlin phase 1: {partition.P}, {partition.min_cut}, {partition.value}')
-
-            for partition in phase_1_partitions:
                 partition.P = ((partition.P[0] - set('s')) | S, partition.P[1] | T)
                 partition.min_cut = ((partition.min_cut[0] - set('s')) | S, partition.min_cut[1] | T_prime)
                 partition.value = sum([G.edges[u, v]['capacity'] for u in partition.min_cut[0] for v in partition.min_cut[1] if (u, v) in G.edges])
-
-            for partition in phase_1_partitions:
-                print(f'post-fix phase 1: {partition.P}, {partition.min_cut}, {partition.value}')
         
+
         # Phase 2
         if phase_2:
             G_phase_2 = G.copy().reverse()
@@ -105,37 +96,23 @@ def yeh_directed(G):
                 G_phase_2 = contract_nodes_with_edge_addition(G_phase_2.copy(), 's', node)
 
             G_phase_2 = push_relabel(G_phase_2.copy(), 't', 's', yeh=True)
-            for edge in G_phase_2.edges:
-                print(edge, G_phase_2.edges[edge])
 
             G_phase_2.remove_node('s')
 
             phase_2_partitions = hao_orlin(G_phase_2.copy(), 't', yeh=True)
 
             for partition in phase_2_partitions:
-                print(f'post-Hao-Orlin phase 2: {partition.P}, {partition.min_cut}, {partition.value}')
-
-            for partition in phase_2_partitions:
                 partition.P = (partition.P[1] | S_prime, (partition.P[0] - set('t')) | T)
                 partition.min_cut = (partition.min_cut[1] | S_prime, (partition.min_cut[0] - set('t')) | T)
                 partition.value = sum([G.edges[u, v]['capacity'] for u in partition.min_cut[0] for v in partition.min_cut[1] if (u, v) in G.edges])
 
-            for partition in phase_2_partitions:
-                print(f'post-fix phase 2: {partition.P}, {partition.min_cut}, {partition.value}')
-
         return phase_1_partitions + phase_2_partitions
-
-    # Rename nodes to integers
-    mapping = {node: i+1 for i, node in enumerate(G.nodes)}
-    G = nx.relabel_nodes(G, mapping)
 
 
     # Initialize the queue
     queue = PriorityQueue()
     for partition in basic_partition():
-        print(partition.P, partition.min_cut, partition.value)
         queue.put(partition)
-    print('---')
     
 
     # Main loop
@@ -163,12 +140,19 @@ def yeh(G):
     """
     Wrapper function for undirected graphs.
     """
+    G = nx.convert_node_labels_to_integers(G)
     return yeh_directed(G.to_directed())
 
 
 if __name__ == '__main__':
     # Example usage
     G = nx.Graph()
+    G.add_node('A')
+    G.add_node('B')
+    G.add_node('C')
+    G.add_node('D')
+    G.add_node('E')
+    G.add_node('F')
     G.add_edge('A', 'B', capacity=3)
     G.add_edge('A', 'C', capacity=2)
     G.add_edge('B', 'C', capacity=1)

@@ -146,7 +146,6 @@ def hao_orlin_directed(G, s, yeh=False):
     n = len(N)
     S = {s}
     t_prime = list(N - S)[0]
-    print(t_prime)
     dormant_nodes = [set() for _ in range(n)]
     dormant_nodes[0].add(s)
     D_max = 0
