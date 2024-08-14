@@ -120,11 +120,11 @@ def push_relabel(G, s, t, yeh=False):
 
 
 if __name__ == '__main__':
-    G = nx.read_graphml('data/example_molecules/83.graphml')
-    # Replace attribute 'order' with 'capacity' for all edges
-    for edge in G.edges:
-        G[edge[0]][edge[1]]['capacity'] = G[edge[0]][edge[1]]['order']
-        del G[edge[0]][edge[1]]['order']
+    # G = nx.read_graphml('data/example_molecules/83.graphml')
+    # # Replace attribute 'order' with 'capacity' for all edges
+    # for edge in G.edges:
+    #     G[edge[0]][edge[1]]['capacity'] = G[edge[0]][edge[1]]['order']
+    #     del G[edge[0]][edge[1]]['order']
 
     G = nx.Graph()
     G.add_edge(1, 2, capacity=1)
@@ -133,8 +133,26 @@ if __name__ == '__main__':
     G.add_edge(4, 1, capacity=6)
     G.add_edge(2, 4, capacity=3)
 
-    push_relabel(G, 1, 3)
+    #print(push_relabel(G, 1, 3))
 
+    G3 = nx.Graph()
+    # G.add_node('A')
+    # G.add_node('B')
+    # G.add_node('C')
+    # G.add_node('D')
+    # G.add_node('E')
+    # G.add_node('F')
+    G3.add_edge('A', 'B', capacity=3)
+    G3.add_edge('A', 'C', capacity=2)
+    G3.add_edge('B', 'C', capacity=1)
+    G3.add_edge('B', 'E', capacity=3)
+    G3.add_edge('C', 'D', capacity=8)
+    G3.add_edge('E', 'F', capacity=4)
+    G3.add_edge('D', 'F', capacity=2)
+    G3.add_edge('B', 'D', capacity=4)
+    G3.add_edge('E', 'D', capacity=4)
+    
+    print(push_relabel(G3, 1, 3))
     # import matplotlib.pyplot as plt
 
     # # Draw the graph

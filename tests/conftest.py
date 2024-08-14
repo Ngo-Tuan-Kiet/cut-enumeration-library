@@ -82,12 +82,12 @@ def star_graph():
 # https://networkx.org/documentation/stable/auto_examples/drawing/plot_weighted_graph.html
 def networkx_example_weighted_graph():
     G = nx.Graph()
-    G.add_node('a')
-    G.add_node('b')
-    G.add_node('c')
-    G.add_node('d')
-    G.add_node('e')
-    G.add_node('f')
+    # G.add_node('a')
+    # G.add_node('b')
+    # G.add_node('c')
+    # G.add_node('d')
+    # G.add_node('e')
+    # G.add_node('f')
     G.add_edge("a", "b", capacity=6)
     G.add_edge("a", "c", capacity=2)
     G.add_edge("c", "d", capacity=1)
@@ -112,12 +112,12 @@ def networkx_example_weighted_graph():
 # https://transport-systems.imperial.ac.uk/tf/60008_21/n2_2_weighted_and_directed_graphs.html
 def icl_weighted_graph():
     G = nx.Graph()
-    G.add_node('A')
-    G.add_node('B')
-    G.add_node('C')
-    G.add_node('D')
-    G.add_node('E')
-    G.add_node('F')
+    # G.add_node('A')
+    # G.add_node('B')
+    # G.add_node('C')
+    # G.add_node('D')
+    # G.add_node('E')
+    # G.add_node('F')
     G.add_edge('A', 'B', capacity=3)
     G.add_edge('A', 'C', capacity=2)
     G.add_edge('B', 'C', capacity=1)
@@ -127,6 +127,9 @@ def icl_weighted_graph():
     G.add_edge('D', 'F', capacity=2)
     G.add_edge('B', 'D', capacity=4)
     G.add_edge('E', 'D', capacity=4)
+    
+    
+
 
     # for conssistent input comment out the following lines (also change parametrize in test_hao_orlin.py)
     # mapping = {'A': 2, 'B': 3, 'C': 6, 'D': 5, 'E': 4, 'F': 1}

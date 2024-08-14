@@ -38,6 +38,7 @@ def yeh_directed(G):
     """
     This function contains the implementation of Yeh's algorithm for directed graphs.
     """
+    phase1_gf=[]
     def basic_partition():
         """
         This function computes the basic partition of the graph.
@@ -69,11 +70,14 @@ def yeh_directed(G):
                 G_phase_1 = contract_nodes_with_edge_addition(G_phase_1.copy(), 's', node)
 
             G_phase_1.add_node('t')
-            for node in T_prime:
+            for node in T_prime: 
                 G_phase_1 = contract_nodes_with_edge_addition(G_phase_1.copy(), 't', node)
 
             G_phase_1 = push_relabel(G_phase_1.copy(), 's', 't', yeh=True)
-            
+            phase1_gf.append(G_phase_1._adj)
+            # print("restgraph aus push-relabel")
+            # print(G_phase_1._adj)
+
             G_phase_1.remove_node('t')
 
             phase_1_partitions = hao_orlin(G_phase_1.copy(), 's', yeh=True)
@@ -133,7 +137,7 @@ def yeh_directed(G):
         if cut not in enumerated_cuts_deduped:
             enumerated_cuts_deduped.append(cut)
             
-    return enumerated_cuts
+    return phase1_gf #enumerated_cuts
 
 
 def yeh(G):
@@ -163,6 +167,26 @@ if __name__ == '__main__':
     G.add_edge('B', 'D', capacity=4)
     G.add_edge('E', 'D', capacity=4)
 
+    G3 = nx.Graph()
+    # G.add_node('A')
+    # G.add_node('B')
+    # G.add_node('C')
+    # G.add_node('D')
+    # G.add_node('E')
+    # G.add_node('F')
+    G3.add_edge('A', 'B', capacity=3)
+    G3.add_edge('A', 'C', capacity=2)
+    G3.add_edge('B', 'C', capacity=1)
+    G3.add_edge('B', 'E', capacity=3)
+    G3.add_edge('C', 'D', capacity=8)
+    G3.add_edge('E', 'F', capacity=4)
+    G3.add_edge('D', 'F', capacity=2)
+    G3.add_edge('B', 'D', capacity=4)
+    G3.add_edge('E', 'D', capacity=4)
+
+
+    
+
     G2 = nx.Graph()
     G2.add_edge("a", "b", capacity=6)
     G2.add_edge("a", "c", capacity=2)
@@ -172,6 +196,43 @@ if __name__ == '__main__':
     G2.add_edge("a", "d", capacity=3)
 
     cuts = yeh(G)
+    cuts_G3=yeh(G3)
+    print(len(cuts))
+    print(len(cuts_G3))
+    print(cuts[0])
+    print(cuts_G3[0])
 
-    for cut in cuts:
-        print(cut.P, cut.min_cut, cut.value)
+    # for ele in cuts:
+    #     if ele not in cuts_G3:
+    #         print(ele)
+
+    # if cuts==cuts_G3:
+    #     print(yes)
+
+    # for cut in cuts:
+    #     print(cut.P, cut.min_cut, cut.value)
+
+    # print("Knoten und ihre Attribute:")
+    # print(G.nodes(data=True))
+
+    # # Kanten und ihre Attribute anzeigen
+    # print("Kanten und ihre Attribute:")
+    # print(G.edges(data=True))
+
+    # # Interne Knotenstruktur anzeigen
+    # print("Interne Knotenstruktur:")
+    # print(G._node)
+
+    # # Interne Kantenstruktur anzeigen
+    # G_arch=G._adj
+    # G3_arch=G3._adj
+    # print("Interne Kantenstruktur:")
+    # print(G._adj)
+
+    # if nx.is_isomorphic(G, G3):
+    #     print("ja")
+    # for node in G.nodes:
+    #     print(node)
+
+    # for node in G3.nodes:
+    #     print(node)
