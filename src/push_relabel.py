@@ -87,6 +87,12 @@ def push_relabel_directed(G, s, t, yeh=False):
         return (S, T)
 
     initialize()
+    for u, v in G.edges:
+        print(u, v, G.edges[u, v]['capacity'])
+
+    print("-----------")
+    for v in G.nodes:
+        print(v, G.nodes[v]['excess'], G.nodes[v]['height'], G.nodes[v]['distance'])
 
     # Push preflow from s to neighbors
     for u in G.neighbors(s):
@@ -107,8 +113,17 @@ def push_relabel_directed(G, s, t, yeh=False):
         return (cut_value, (S, T))
     else:
         for edge in saturated_edges:
+            print(edge)
             G.remove_edge(edge[0], edge[1])
             G.remove_edge(edge[1], edge[0])
+        for edge in G.edges:
+            # change the capacity of the edges to the flow
+            G[edge[0]][edge[1]]['capacity'] = G[edge[0]][edge[1]]['capacity'] - abs(G[edge[0]][edge[1]]['preflow'])
+            G[edge[1]][edge[0]]['capacity'] = G[edge[1]][edge[0]]['capacity'] - abs(G[edge[1]][edge[0]]['preflow'])
+            G[edge[0]][edge[1]]['preflow'] = 0
+            G[edge[1]][edge[0]]['preflow'] = 0
+            print(edge, G[edge[0]][edge[1]]['capacity'], G[edge[0]][edge[1]]['preflow'])
+
         return G
     
 
@@ -127,13 +142,24 @@ if __name__ == '__main__':
         del G[edge[0]][edge[1]]['order']
 
     G = nx.Graph()
-    G.add_edge(1, 2, capacity=1)
-    G.add_edge(2, 3, capacity=4)
-    G.add_edge(3, 4, capacity=2)
-    G.add_edge(4, 1, capacity=6)
-    G.add_edge(2, 4, capacity=3)
+    G.add_node('A')
+    G.add_node('B')
+    G.add_node('C')
+    G.add_node('E')
+    G.add_node('D')
+    G.add_node('F')
+    G.add_edge('A', 'B', capacity=3)
+    G.add_edge('A', 'C', capacity=2)
+    G.add_edge('B', 'C', capacity=1)
+    G.add_edge('B', 'E', capacity=3)
+    G.add_edge('C', 'D', capacity=8)
+    G.add_edge('E', 'F', capacity=4)
+    G.add_edge('D', 'F', capacity=2)
+    G.add_edge('B', 'D', capacity=4)
+    G.add_edge('E', 'D', capacity=4)
 
-    push_relabel(G, 1, 3)
+
+    push_relabel(G, 'B', 'A', yeh=True)
 
     # import matplotlib.pyplot as plt
 

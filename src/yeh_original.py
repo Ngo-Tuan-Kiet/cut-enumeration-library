@@ -7,6 +7,7 @@ from queue import PriorityQueue
 from hao_orlin_original import Partition, hao_orlin
 from push_relabel import push_relabel
 from typing import Union, Tuple
+import matplotlib.pyplot as plt
 
 
 type NodeSet = set
@@ -60,6 +61,10 @@ def yeh_directed(G):
         phase_1_partitions = []
         phase_2_partitions = []
 
+        print(f"Partition: {partition.P}")
+        print(f"Min cut: {partition.min_cut} with value {partition.value}")
+        print(f"S: {S}, T: {T}, S_prime: {S_prime}, T_prime: {T_prime}")
+
         # Phase 1
         if phase_1:
             G_phase_1 = G.copy()
@@ -95,7 +100,19 @@ def yeh_directed(G):
             for node in S_prime:
                 G_phase_2 = contract_nodes_with_edge_addition(G_phase_2.copy(), 's', node)
 
+            # draw the graph
+            for u, v in G_phase_2.edges:
+                print(u, v, G_phase_2.edges[u, v]['capacity'])
+            # nx.draw(G_phase_2, with_labels=True)
+            # plt.show()
+            print("Phase 2")
+            
             G_phase_2 = push_relabel(G_phase_2.copy(), 't', 's', yeh=True)
+
+            # print edges with capacities
+            for u, v in G_phase_2.edges:
+                print(u, v, G_phase_2.edges[u, v]['capacity'], G_phase_2.edges[u, v]['preflow'])
+
 
             G_phase_2.remove_node('s')
 
@@ -112,6 +129,8 @@ def yeh_directed(G):
     # Initialize the queue
     queue = PriorityQueue()
     for partition in basic_partition():
+        print(partition.P, partition.min_cut, partition.value)
+        print()
         queue.put(partition)
     
 
@@ -122,6 +141,7 @@ def yeh_directed(G):
         current_partition = queue.get()
         enumerated_cuts.append(current_partition)
         for partition in extract_min_partition(current_partition):
+            print(partition.P, partition.min_cut, partition.value)
             queue.put(partition)
 
     # Add inf cut
@@ -141,6 +161,9 @@ def yeh(G):
     Wrapper function for undirected graphs.
     """
     G = nx.convert_node_labels_to_integers(G)
+    # print edges with capacities
+    for u, v in G.edges:
+        print(u, v, G.edges[u, v]['capacity'])
     return yeh_directed(G.to_directed())
 
 
@@ -150,8 +173,8 @@ if __name__ == '__main__':
     G.add_node('A')
     G.add_node('B')
     G.add_node('C')
-    G.add_node('D')
     G.add_node('E')
+    G.add_node('D')
     G.add_node('F')
     G.add_edge('A', 'B', capacity=3)
     G.add_edge('A', 'C', capacity=2)
