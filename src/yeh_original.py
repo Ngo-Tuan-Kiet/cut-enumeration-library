@@ -86,16 +86,19 @@ def yeh_directed(G):
             for u in G_phase_1.nodes:
                 for v in G_phase_1.nodes:
                     if (u, v) in G_phase_1.edges:
-                        G_phase_1.edges[u, v]['capacity'] -= flow_dict[u][v]
+                        G_phase_1.edges[u, v]['capacity'] -= abs(flow_dict[u][v])
+                        # if G_phase_1.edges[u, v]['capacity'] == 0:
+                        #     G_phase_1.remove_edge(u, v)
+                        #     G_phase_1.remove_edge(v, u)
 
             G_phase_1.remove_node('t')
 
             phase_1_partitions = hao_orlin(G_phase_1.copy(), 's', yeh=True)
 
-            for partition in phase_1_partitions:
-                partition.P = ((partition.P[0] - set('s')) | S, partition.P[1] | T)
-                partition.min_cut = ((partition.min_cut[0] - set('s')) | S, partition.min_cut[1] | T_prime)
-                partition.value = sum([G.edges[u, v]['capacity'] for u in partition.min_cut[0] for v in partition.min_cut[1] if (u, v) in G.edges])
+            for partition_1 in phase_1_partitions:
+                partition_1.P = ((partition_1.P[0] - set('s')) | S, partition_1.P[1] | T)
+                partition_1.min_cut = ((partition_1.min_cut[0] - set('s')) | S, partition_1.min_cut[1] | T_prime)
+                partition_1.value = sum([G.edges[u, v]['capacity'] for u in partition_1.min_cut[0] for v in partition_1.min_cut[1] if (u, v) in G.edges])
         
 
         # Phase 2
@@ -121,16 +124,31 @@ def yeh_directed(G):
             for u in G_phase_2.nodes:
                 for v in G_phase_2.nodes:
                     if (u, v) in G_phase_2.edges:
-                        G_phase_2.edges[u, v]['capacity'] -= flow_dict[u][v]
+                        G_phase_2.edges[u, v]['capacity'] -= abs(flow_dict[u][v])
+                        # if G_phase_2.edges[u, v]['capacity'] == 0:
+                        #     G_phase_2.remove_edge(u, v)
+                        #     G_phase_2.remove_edge(v, u)
             
             G_phase_2.remove_node('s')
 
             phase_2_partitions = hao_orlin(G_phase_2.copy(), 't', yeh=True)
 
-            for partition in phase_2_partitions:
-                partition.P = (partition.P[1] | S_prime, (partition.P[0] - set('t')) | T)
-                partition.min_cut = (partition.min_cut[1] | S_prime, (partition.min_cut[0] - set('t')) | T)
-                partition.value = sum([G.edges[u, v]['capacity'] for u in partition.min_cut[0] for v in partition.min_cut[1] if (u, v) in G.edges])
+            for partition_2 in phase_2_partitions:
+                if partition.P == ({0}, {1}):
+                    print('Ich bin hier')
+                    print(partition_2.min_cut)
+                    print(partition_2.P)
+                partition_2.P = (partition_2.P[1] | S_prime, (partition_2.P[0] - set('t')) | T)
+                
+                partition_2.min_cut = (partition_2.min_cut[1] | S_prime, (partition_2.min_cut[0] - set('t')) | T)
+                partition_2.value = sum([G.edges[u, v]['capacity'] for u in partition_2.min_cut[0] for v in partition_2.min_cut[1] if (u, v) in G.edges])
+                if partition.P == ({0}, {1}):
+                    print('Ich bin nicht hier')
+                    print(partition_2.min_cut, partition_2.value)
+                    for edge in G.edges:
+                        if edge[0] in partition_2.min_cut[0] and edge[1] in partition_2.min_cut[1]:
+                            print(f'Edge {edge} with capacity {G.edges[edge]["capacity"]}')
+
 
         print('-----')
         return phase_1_partitions + phase_2_partitions
@@ -173,7 +191,7 @@ def yeh(G):
     # print(f'Pre-map: G has nodes {G.nodes}')
     # for edge in G.edges:
     #     print(f'G has edge {edge} with capacity {G.edges[edge]["capacity"]}')
-    G = nx.convert_node_labels_to_integers(G)
+    # G = nx.convert_node_labels_to_integers(G)
     # print(f'Post-map: G has nodes {G.nodes}')
     # for edge in G.edges:
     #     print(f'G has edge {edge} with capacity {G.edges[edge]["capacity"]}')
@@ -196,6 +214,26 @@ if __name__ == '__main__':
     G2 = nx.read_graphml('data/example_molecules/89.graphml')
     for edge in G2.edges:
         G2.edges[edge]['capacity'] = G2.edges[edge]['order']
+
+    G = nx.Graph()
+    G.add_edges_from(
+        [
+            (0, 1, {"capacity": 4}),
+            (0, 7, {"capacity": 8}),
+            (1, 7, {"capacity": 11}),
+            (1, 2, {"capacity": 8}),
+            (2, 8, {"capacity": 2}),
+            (2, 5, {"capacity": 4}),
+            (2, 3, {"capacity": 7}),
+            (3, 4, {"capacity": 9}),
+            (3, 5, {"capacity": 14}),
+            (4, 5, {"capacity": 10}),
+            (5, 6, {"capacity": 2}),
+            (6, 8, {"capacity": 6}),
+            (7, 8, {"capacity": 7}),
+        ]
+    )
+
 
     cuts = yeh(G)
     for cut in cuts:
