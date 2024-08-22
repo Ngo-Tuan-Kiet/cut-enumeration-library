@@ -5,6 +5,7 @@ from queue import PriorityQueue
 from typing import Tuple, Union
 import cut_bases as cb
 import fast_gauss as fg
+import time
 
 
 # Type definitions congruent with output of min_cut method in networkx (tuple of mi-cut value and ST-partition)
@@ -314,21 +315,6 @@ def varizani_yannakakis(G: nx.DiGraph | nx.Graph, greedy=False) -> list[Cut]:
 
 
 if __name__ == '__main__':
-    G = nx.Graph()
-    G.add_edge(1, 2, capacity=1)
-    G.add_edge(2, 3, capacity=4)
-    G.add_edge(3, 4, capacity=2)
-    G.add_edge(4, 1, capacity=5)
-    G.add_edge(2, 4, capacity=3)
-
-    cuts = varizani_yannakakis(G)
-    print('---')
-    for cut in cuts:
-        print(cut.value, cut.st_partition, cut.partition_vector)
-
-    exit()
-
-
     G = nx.read_graphml('data/example_molecules/89.graphml')
 
     # Replace attribute 'order' with 'capacity' for all edges
@@ -336,21 +322,12 @@ if __name__ == '__main__':
         G[edge[0]][edge[1]]['capacity'] = G[edge[0]][edge[1]]['order']
         del G[edge[0]][edge[1]]['order']
 
-    # complete_cut_set = (varizani_yannakakis(G))
+    t0 = time.time()
+    complete_cut_set = (varizani_yannakakis(G))
+    t1 = time.time()
+    print(t1 - t0)
 
-    G = nx.Graph()
-    mapping = {'A': 2, 'B': 3, 'C': 6, 'D': 5, 'E': 4, 'F': 1}
-    G.add_edge(mapping['A'], mapping['B'], capacity=5)
-    G.add_edge(mapping['A'], mapping['C'], capacity=2)
-    G.add_edge(mapping['B'], mapping['C'], capacity=1)
-    G.add_edge(mapping['B'], mapping['E'], capacity=3)
-    G.add_edge(mapping['C'], mapping['D'], capacity=8)
-    G.add_edge(mapping['E'], mapping['F'], capacity=4)
-    G.add_edge(mapping['D'], mapping['F'], capacity=2)
-    G.add_edge(mapping['B'], mapping['D'], capacity=4)
-    G.add_edge(mapping['E'], mapping['D'], capacity=4)
 
-    print(minimum_s_cut(G, 4))
     # G = nx.DiGraph()
     # G.add_edge(1, 2, capacity=10)
     # G.add_edge(2, 1, capacity=10)

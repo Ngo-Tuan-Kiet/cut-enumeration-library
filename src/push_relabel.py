@@ -109,6 +109,8 @@ def push_relabel_directed(G, s, t, yeh=False):
         for edge in saturated_edges:
             G.remove_edge(edge[0], edge[1])
             G.remove_edge(edge[1], edge[0])
+        for edge in G.edges:
+            G[edge[0]][edge[1]]['capacity'] -= abs(G[edge[0]][edge[1]]['preflow'])
         return G
     
 
@@ -126,14 +128,25 @@ if __name__ == '__main__':
         G[edge[0]][edge[1]]['capacity'] = G[edge[0]][edge[1]]['order']
         del G[edge[0]][edge[1]]['order']
 
-    G = nx.Graph()
-    G.add_edge(1, 2, capacity=1)
-    G.add_edge(2, 3, capacity=4)
-    G.add_edge(3, 4, capacity=2)
-    G.add_edge(4, 1, capacity=6)
-    G.add_edge(2, 4, capacity=3)
+    G2 = nx.Graph()
+    G2.add_edge('A', 'B', capacity=3)
+    G2.add_edge('A', 'C', capacity=2)
+    G2.add_edge('B', 'C', capacity=1)
+    G2.add_edge('C', 'D', capacity=8)
+    G2.add_edge('B', 'E', capacity=3)
+    G2.add_edge('E', 'F', capacity=4)
+    G2.add_edge('D', 'F', capacity=2)
+    G2.add_edge('B', 'D', capacity=4)
+    G2.add_edge('E', 'D', capacity=4)
 
-    push_relabel(G, 1, 3)
+    G3 = nx.read_edgelist('edge_list.txt')
+
+    
+    G2 = nx.convert_node_labels_to_integers(G2)
+    residual = push_relabel(G3, 't', 's', yeh=True)
+
+    for edge in residual.edges:
+        print(f'Edge {edge} with capacity {residual.edges[edge[0], edge[1]]["capacity"]} and preflow {residual.edges[edge[0], edge[1]]["preflow"]}')
 
     # import matplotlib.pyplot as plt
 

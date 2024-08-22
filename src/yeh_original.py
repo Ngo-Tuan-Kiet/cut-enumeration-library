@@ -7,6 +7,7 @@ from queue import PriorityQueue
 from hao_orlin_original import Partition, hao_orlin
 from push_relabel import push_relabel
 from typing import Union, Tuple
+import time
 
 
 type NodeSet = set
@@ -72,8 +73,17 @@ def yeh_directed(G):
             for node in T_prime:
                 G_phase_1 = contract_nodes_with_edge_addition(G_phase_1.copy(), 't', node)
 
-            G_phase_1 = push_relabel(G_phase_1.copy(), 's', 't', yeh=True)
+            #G_phase_1 = push_relabel(G_phase_1.copy(), 's', 't', yeh=True)
             
+            max_flow, flow_dict = nx.maximum_flow(G_phase_1, 's', 't', capacity='capacity')
+            print(f'Max flow: {max_flow}')
+            print(f'Flow dict: {flow_dict}')
+            # Update the capacities of the edges
+            for u in G_phase_1.nodes:
+                for v in G_phase_1.nodes:
+                    if (u, v) in G_phase_1.edges:
+                        G_phase_1.edges[u, v]['capacity'] -= flow_dict[u][v]
+
             G_phase_1.remove_node('t')
 
             phase_1_partitions = hao_orlin(G_phase_1.copy(), 's', yeh=True)
@@ -95,8 +105,20 @@ def yeh_directed(G):
             for node in S_prime:
                 G_phase_2 = contract_nodes_with_edge_addition(G_phase_2.copy(), 's', node)
 
-            G_phase_2 = push_relabel(G_phase_2.copy(), 't', 's', yeh=True)
+            print(f'Node info: {G_phase_2.nodes.data(True)}')
+            print(f'Edge info: {G_phase_2.edges.data(True)}')
 
+            
+            #G_phase_2 = push_relabel(G_phase_2.copy(), 't', 's', yeh=True)
+            max_flow, flow_dict = nx.maximum_flow(G_phase_2, 't', 's', capacity='capacity')
+            print(f'Max flow: {max_flow}')
+            print(f'Flow dict: {flow_dict}')
+            # Update the capacities of the edges
+            for u in G_phase_2.nodes:
+                for v in G_phase_2.nodes:
+                    if (u, v) in G_phase_2.edges:
+                        G_phase_2.edges[u, v]['capacity'] -= flow_dict[u][v]
+            
             G_phase_2.remove_node('s')
 
             phase_2_partitions = hao_orlin(G_phase_2.copy(), 't', yeh=True)
@@ -106,13 +128,16 @@ def yeh_directed(G):
                 partition.min_cut = (partition.min_cut[1] | S_prime, (partition.min_cut[0] - set('t')) | T)
                 partition.value = sum([G.edges[u, v]['capacity'] for u in partition.min_cut[0] for v in partition.min_cut[1] if (u, v) in G.edges])
 
+        print('-----')
         return phase_1_partitions + phase_2_partitions
 
 
     # Initialize the queue
     queue = PriorityQueue()
     for partition in basic_partition():
+        print(f'Partition: {partition.P} with min_cut {partition.min_cut} and value {partition.value}')
         queue.put(partition)
+    print(f'Queue size: {queue.qsize()}')
     
 
     # Main loop
@@ -122,6 +147,7 @@ def yeh_directed(G):
         current_partition = queue.get()
         enumerated_cuts.append(current_partition)
         for partition in extract_min_partition(current_partition):
+            print(f'Partition: {partition.P} with min_cut {partition.min_cut} and value {partition.value}')
             queue.put(partition)
 
     # Add inf cut
@@ -140,19 +166,19 @@ def yeh(G):
     """
     Wrapper function for undirected graphs.
     """
+    # print(f'Pre-map: G has nodes {G.nodes}')
+    # for edge in G.edges:
+    #     print(f'G has edge {edge} with capacity {G.edges[edge]["capacity"]}')
     G = nx.convert_node_labels_to_integers(G)
+    # print(f'Post-map: G has nodes {G.nodes}')
+    # for edge in G.edges:
+    #     print(f'G has edge {edge} with capacity {G.edges[edge]["capacity"]}')
     return yeh_directed(G.to_directed())
 
 
 if __name__ == '__main__':
     # Example usage
     G = nx.Graph()
-    G.add_node('A')
-    G.add_node('B')
-    G.add_node('C')
-    G.add_node('D')
-    G.add_node('E')
-    G.add_node('F')
     G.add_edge('A', 'B', capacity=3)
     G.add_edge('A', 'C', capacity=2)
     G.add_edge('B', 'C', capacity=1)
@@ -163,15 +189,10 @@ if __name__ == '__main__':
     G.add_edge('B', 'D', capacity=4)
     G.add_edge('E', 'D', capacity=4)
 
-    G2 = nx.Graph()
-    G2.add_edge("a", "b", capacity=6)
-    G2.add_edge("a", "c", capacity=2)
-    G2.add_edge("c", "d", capacity=1)
-    G2.add_edge("c", "e", capacity=7)
-    G2.add_edge("c", "f", capacity=9)
-    G2.add_edge("a", "d", capacity=3)
+    G2 = nx.read_graphml('data/example_molecules/89.graphml')
+    for edge in G2.edges:
+        G2.edges[edge]['capacity'] = G2.edges[edge]['order']
 
     cuts = yeh(G)
-
     for cut in cuts:
-        print(cut.P, cut.min_cut, cut.value)
+        print(cut.value, cut.P, cut.min_cut)

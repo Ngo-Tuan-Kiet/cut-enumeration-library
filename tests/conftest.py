@@ -112,12 +112,6 @@ def networkx_example_weighted_graph():
 # https://transport-systems.imperial.ac.uk/tf/60008_21/n2_2_weighted_and_directed_graphs.html
 def icl_weighted_graph():
     G = nx.Graph()
-    G.add_node('A')
-    G.add_node('B')
-    G.add_node('C')
-    G.add_node('D')
-    G.add_node('E')
-    G.add_node('F')
     G.add_edge('A', 'B', capacity=3)
     G.add_edge('A', 'C', capacity=2)
     G.add_edge('B', 'C', capacity=1)
