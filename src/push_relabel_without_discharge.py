@@ -5,7 +5,7 @@ import cProfile
 from collections import Counter
 import matplotlib.pyplot as plt
 
-def push_relabel_directed(G, s, t):
+def push_relabel_directed(G, s, t, yeh=False):
     """
     Push-relabel algorithm for directed graphs.
     """
@@ -104,14 +104,26 @@ def push_relabel_directed(G, s, t):
     S, T = edge_cuts_to_st_partition(saturated_edges)
     cut_value = G.nodes[t]['excess'] 
 
-    return (cut_value, (S, T))
+    if yeh:
+        for edge in saturated_edges:
+            if G.has_edge(edge[0], edge[1]):
+                G.remove_edge(edge[0], edge[1])
+            else:
+                G.remove_edge(edge[1], edge[0])
+        for edge in G.edges:
+            # change the capacity of the edges to the flow
+            G[edge[0]][edge[1]]['capacity'] = G[edge[0]][edge[1]]['capacity'] - abs(G[edge[0]][edge[1]]['preflow'])
+            G[edge[1]][edge[0]]['capacity'] = G[edge[1]][edge[0]]['capacity'] - abs(G[edge[1]][edge[0]]['preflow'])
+            return G
+    else:
+        return (cut_value, (S, T))
 
 
-def push_relabel(G, s, t):
+def push_relabel(G, s, t, yeh=False):
     """
     Push-relabel wrapper for undirected graphs.
     """
-    return push_relabel_directed(G, s, t) if G.is_directed() else push_relabel_directed(G.to_directed(), s, t)
+    return push_relabel_directed(G, s, t, yeh) if G.is_directed() else push_relabel_directed(G.to_directed(), s, t, yeh)
 
 
 if __name__ == '__main__':

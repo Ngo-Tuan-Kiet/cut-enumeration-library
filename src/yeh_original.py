@@ -61,6 +61,10 @@ def yeh_directed(G):
         phase_1_partitions = []
         phase_2_partitions = []
 
+        print(f"Partition: {partition.P}")
+        print(f"Min cut: {partition.min_cut} with value {partition.value}")
+        print(f"S: {S}, T: {T}, S_prime: {S_prime}, T_prime: {T_prime}")
+
         # Phase 1
         if phase_1:
             G_phase_1 = G.copy()
