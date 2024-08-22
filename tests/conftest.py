@@ -140,5 +140,28 @@ def icl_weighted_graph():
     # G.add_edge(mapping['B'], mapping['D'], capacity=4)
     # G.add_edge(mapping['E'], mapping['D'], capacity=4)
 
+    return G
+
+@pytest.fixture()
+# https://transport-systems.imperial.ac.uk/tf/60008_21/n2_2_weighted_and_directed_graphs.html
+def max_span_tree_weighted_graph():
+    G = nx.Graph()
+    G.add_edges_from(
+        [
+            (0, 1, {"capacity": 4}),
+            (0, 7, {"capacity": 8}),
+            (1, 7, {"capacity": 11}),
+            (1, 2, {"capacity": 8}),
+            (2, 8, {"capacity": 2}),
+            (2, 5, {"capacity": 4}),
+            (2, 3, {"capacity": 7}),
+            (3, 4, {"capacity": 9}),
+            (3, 5, {"capacity": 14}),
+            (4, 5, {"capacity": 10}),
+            (5, 6, {"capacity": 2}),
+            (6, 8, {"capacity": 6}),
+            (7, 8, {"capacity": 7}),
+        ]
+    )
 
     return G
