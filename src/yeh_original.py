@@ -63,6 +63,7 @@ def yeh_directed(G):
 
         # Phase 1
         if phase_1:
+            #print("jetzt phase1")
             G_phase_1 = G.copy()
             # Contract the nodes in S and T_prime
             G_phase_1.add_node('s')
@@ -70,15 +71,24 @@ def yeh_directed(G):
                 G_phase_1 = contract_nodes_with_edge_addition(G_phase_1.copy(), 's', node)
 
             G_phase_1.add_node('t')
-            for node in T_prime: 
+            for node in T: 
                 G_phase_1 = contract_nodes_with_edge_addition(G_phase_1.copy(), 't', node)
 
+            # G_phase_1.add_node('t')
+            # for node in T_prime: 
+            #     G_phase_1 = contract_nodes_with_edge_addition(G_phase_1.copy(), 't', node)
+
             G_phase_1 = push_relabel(G_phase_1.copy(), 's', 't', yeh=True)
-            phase1_gf.append(G_phase_1._adj)
+            reachable_from_s = set(nx.descendants(G_phase_1, 's')) | {'s'} 
+            #print(reachable_from_s)
+            T_star = set(G_phase_1.nodes()) - reachable_from_s
+
+            #print(G_phase_1)
+            #phase1_gf.append(G_phase_1._adj)
             # print("restgraph aus push-relabel")
             # print(G_phase_1._adj)
 
-            G_phase_1.remove_node('t')
+            G_phase_1.remove_nodes_from(T_star)
 
             phase_1_partitions = hao_orlin(G_phase_1.copy(), 's', yeh=True)
 
@@ -90,18 +100,36 @@ def yeh_directed(G):
 
         # Phase 2
         if phase_2:
+            #print("jetzt phase 2")
             G_phase_2 = G.copy().reverse()
             # Contract the nodes in T and S_prime
             G_phase_2.add_node('t')
             for node in T:
                 G_phase_2 = contract_nodes_with_edge_addition(G_phase_2.copy(), 't', node)
             G_phase_2.add_node('s')
-            for node in S_prime:
+            for node in S:
                 G_phase_2 = contract_nodes_with_edge_addition(G_phase_2.copy(), 's', node)
+            # for edge in G2.edges(data=True):
+            #     u, v, data = edge
+            #     print(f"Edge: {u} -> {v}")
+            #     print(f"Capacity: {data.get('capacity', 'No capacity attribute')}")
+            #     print(f"Preflow: {data.get('preflow', 'No preflow attribute')}")
+            #     print()
 
             G_phase_2 = push_relabel(G_phase_2.copy(), 't', 's', yeh=True)
+            reachable_from_t = set(nx.descendants(G_phase_2, 't')) | {'t'} 
+            #print(reachable_from_t)
+            S_star = set(G_phase_2.nodes()) - reachable_from_t
 
-            G_phase_2.remove_node('s')
+            #print(G_phase_1)
+            #phase1_gf.append(G_phase_1._adj)
+            # print("restgraph aus push-relabel")
+            # print(G_phase_1._adj)
+
+            G_phase_2.remove_nodes_from(S_star)
+            #print(u_o)
+            
+            #G_phase_2.remove_node('s')
 
             phase_2_partitions = hao_orlin(G_phase_2.copy(), 't', yeh=True)
 
@@ -137,7 +165,7 @@ def yeh_directed(G):
         if cut not in enumerated_cuts_deduped:
             enumerated_cuts_deduped.append(cut)
             
-    return phase1_gf #enumerated_cuts
+    return enumerated_cuts #phase1_gf
 
 
 def yeh(G):
@@ -151,12 +179,12 @@ def yeh(G):
 if __name__ == '__main__':
     # Example usage
     G = nx.Graph()
-    G.add_node('A')
-    G.add_node('B')
-    G.add_node('C')
-    G.add_node('D')
-    G.add_node('E')
-    G.add_node('F')
+    # G.add_node('A')
+    # G.add_node('B')
+    # G.add_node('C')
+    # G.add_node('E')
+    # G.add_node('D')
+    # G.add_node('F')
     G.add_edge('A', 'B', capacity=3)
     G.add_edge('A', 'C', capacity=2)
     G.add_edge('B', 'C', capacity=1)
@@ -166,6 +194,7 @@ if __name__ == '__main__':
     G.add_edge('D', 'F', capacity=2)
     G.add_edge('B', 'D', capacity=4)
     G.add_edge('E', 'D', capacity=4)
+
 
     G3 = nx.Graph()
     # G.add_node('A')
@@ -195,22 +224,29 @@ if __name__ == '__main__':
     G2.add_edge("c", "f", capacity=9)
     G2.add_edge("a", "d", capacity=3)
 
-    cuts = yeh(G)
-    cuts_G3=yeh(G3)
-    print(len(cuts))
-    print(len(cuts_G3))
-    print(cuts[0])
-    print(cuts_G3[0])
+cuts = yeh(G)
+#cuts_G3=yeh(G3)
+# print(len(cuts))
+# print(len(cuts_G3))
+# print(cuts)
+# print(cuts_G3)
+# print("------------------")
 
+    # count=0
     # for ele in cuts:
     #     if ele not in cuts_G3:
+    #         count=count+1
     #         print(ele)
+    # print(count)
 
     # if cuts==cuts_G3:
     #     print(yes)
 
-    # for cut in cuts:
-    #     print(cut.P, cut.min_cut, cut.value)
+for cut in cuts:
+    print(cut.P, cut.min_cut, cut.value)
+    
+    # G_mapped=nx.convert_node_labels_to_integers(G)
+    # print(G_mapped)
 
     # print("Knoten und ihre Attribute:")
     # print(G.nodes(data=True))

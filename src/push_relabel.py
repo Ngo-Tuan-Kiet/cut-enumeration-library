@@ -57,8 +57,12 @@ def push_relabel_directed(G, s, t, yeh=False):
         Discharges the excess flow from node u.
         """
         while G.nodes[u]['excess'] > 0:
+            #print("jetzt discharge")
+            #print(G.nodes[u])
             for v in G.neighbors(u):
+                #print(v)
                 if G.nodes[u]['height'] == G.nodes[v]['height'] + 1 and G.edges[u, v]['capacity'] - G.edges[u, v]['preflow'] > 0:
+                    #print(v)
                     push(u, v)
                     if G.nodes[u]['excess'] == 0:
                         break
@@ -93,8 +97,13 @@ def push_relabel_directed(G, s, t, yeh=False):
         push(s, u)
 
     # Discharge active nodes
+    u_order=[]
     while ACTIVE_NODES:
         u = ACTIVE_NODES.pop()
+        # print("u ist:")
+        # print(u)
+        # print(G.nodes[u])
+        u_order.append(u)
         discharge(u)
 
     # Find S-T partition from saturated edges
@@ -109,7 +118,8 @@ def push_relabel_directed(G, s, t, yeh=False):
         for edge in saturated_edges:
             G.remove_edge(edge[0], edge[1])
             G.remove_edge(edge[1], edge[0])
-        return G
+        return G #, u_order
+    
     
 
 def push_relabel(G, s, t, yeh=False):
@@ -126,22 +136,22 @@ if __name__ == '__main__':
     #     G[edge[0]][edge[1]]['capacity'] = G[edge[0]][edge[1]]['order']
     #     del G[edge[0]][edge[1]]['order']
 
-    G = nx.Graph()
-    G.add_edge(1, 2, capacity=1)
-    G.add_edge(2, 3, capacity=4)
-    G.add_edge(3, 4, capacity=2)
-    G.add_edge(4, 1, capacity=6)
-    G.add_edge(2, 4, capacity=3)
+    # G = nx.Graph()
+    # G.add_edge(1, 2, capacity=1)
+    # G.add_edge(2, 3, capacity=4)
+    # G.add_edge(3, 4, capacity=2)
+    # G.add_edge(4, 1, capacity=6)
+    # G.add_edge(2, 4, capacity=3)
 
     #print(push_relabel(G, 1, 3))
 
     G3 = nx.Graph()
-    # G.add_node('A')
-    # G.add_node('B')
-    # G.add_node('C')
-    # G.add_node('D')
-    # G.add_node('E')
-    # G.add_node('F')
+    # G3.add_node('A')
+    # G3.add_node('B')
+    # G3.add_node('C')
+    # G3.add_node('D')
+    # G3.add_node('E')
+    # G3.add_node('F')
     G3.add_edge('A', 'B', capacity=3)
     G3.add_edge('A', 'C', capacity=2)
     G3.add_edge('B', 'C', capacity=1)
@@ -151,8 +161,10 @@ if __name__ == '__main__':
     G3.add_edge('D', 'F', capacity=2)
     G3.add_edge('B', 'D', capacity=4)
     G3.add_edge('E', 'D', capacity=4)
+
+    G3_mapped=nx.convert_node_labels_to_integers(G3)
     
-    print(push_relabel(G3, 1, 3))
+    #print(push_relabel(G3_mapped, 1, 0, yeh=True))
     # import matplotlib.pyplot as plt
 
     # # Draw the graph
@@ -180,3 +192,7 @@ if __name__ == '__main__':
     # #ic(min_cut)
 
     # print(min_cut)
+    # u_wo_nodes=[4, 2, 4, 3, 4, 5, 3, 4, 2, 4, 5, 3, 4, 5, 3, 4, 2, 4, 3, 5, 3, 4, 5, 3, 4, 5, 3, 2]
+    # u_w_nodes=[3, 2, 3, 4, 5, 4, 5, 3, 2, 3, 4, 5, 4, 5, 3, 2, 3, 4, 5, 4, 3, 2, 3, 5, 3, 5, 3, 5, 4, 2]
+    # if u_wo_nodes==u_w_nodes:
+    #     #print("yes")
