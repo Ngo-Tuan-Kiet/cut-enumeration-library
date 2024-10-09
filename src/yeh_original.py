@@ -8,7 +8,6 @@ from hao_orlin_original import Partition, hao_orlin
 from push_relabel import push_relabel
 from typing import Union, Tuple
 import matplotlib.pyplot as plt
-import icecream as ic
 
 
 type NodeSet = set
@@ -82,7 +81,6 @@ def yeh_directed(G):
             for node in G_phase_1.nodes - {'t'}:
                 G_phase_1.add_edge(node, 'inf', capacity=-math.inf)
                 G_phase_1.add_edge('inf', node, capacity=math.inf)
-            ic.ic(G_phase_1.edges)
 
             # G_phase_1 = push_relabel(G_phase_1.copy(), 's', 't', yeh=True)
             max_flow, flow_dict = nx.maximum_flow(G_phase_1, 's', 't', capacity='capacity')
