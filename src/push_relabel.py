@@ -112,6 +112,8 @@ def push_relabel_directed(G, s, t, yeh=False):
     if yeh == False:
         return (cut_value, (S, T))
     else:
+        print('looooooooooool')
+
         for edge in saturated_edges:
             print(edge)
             G.remove_edge(edge[0], edge[1])
@@ -123,6 +125,7 @@ def push_relabel_directed(G, s, t, yeh=False):
             G[edge[0]][edge[1]]['preflow'] = 0
             G[edge[1]][edge[0]]['preflow'] = 0
             print(edge, G[edge[0]][edge[1]]['capacity'], G[edge[0]][edge[1]]['preflow'])
+        print('roffffffffl')
 
         return G
     

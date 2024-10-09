@@ -77,9 +77,16 @@ def yeh_directed(G):
             for node in T_prime:
                 G_phase_1 = contract_nodes_with_edge_addition(G_phase_1.copy(), 't', node)
 
+            G_phase_1.add_node('inf')
+            for node in G_phase_1.nodes - {'s', 't'}:
+                G_phase_1.add_edge(node, 'inf', capacity=-math.inf)
+                G_phase_1.add_edge('inf', node, capacity=math.inf)
+
             G_phase_1 = push_relabel(G_phase_1.copy(), 's', 't', yeh=True)
             
             G_phase_1.remove_node('t')
+            G_phase_1.remove_node('inf')
+
 
             phase_1_partitions = hao_orlin(G_phase_1.copy(), 's', yeh=True)
 
@@ -99,13 +106,18 @@ def yeh_directed(G):
             G_phase_2.add_node('s')
             for node in S_prime:
                 G_phase_2 = contract_nodes_with_edge_addition(G_phase_2.copy(), 's', node)
+            
+            G_phase_2.add_node('inf')
+            for node in G_phase_2.nodes - {'s', 't'}:
+                G_phase_2.add_edge(node, 'inf', capacity= -math.inf)
+                G_phase_2.add_edge('inf', node, capacity=math.inf)
 
             # draw the graph
-            for u, v in G_phase_2.edges:
-                print(u, v, G_phase_2.edges[u, v]['capacity'])
+            # for u, v in G_phase_2.edges:
+            #     print(u, v, G_phase_2.edges[u, v]['capacity'])
             # nx.draw(G_phase_2, with_labels=True)
             # plt.show()
-            print("Phase 2")
+            # print("Phase 2")
             
             G_phase_2 = push_relabel(G_phase_2.copy(), 't', 's', yeh=True)
 
@@ -115,6 +127,7 @@ def yeh_directed(G):
 
 
             G_phase_2.remove_node('s')
+            G_phase_2.remove_node('inf')
 
             phase_2_partitions = hao_orlin(G_phase_2.copy(), 't', yeh=True)
 
