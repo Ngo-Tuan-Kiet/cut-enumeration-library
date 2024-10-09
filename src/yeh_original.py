@@ -8,6 +8,7 @@ from hao_orlin_original import Partition, hao_orlin
 from push_relabel import push_relabel
 from typing import Union, Tuple
 import matplotlib.pyplot as plt
+import icecream as ic
 
 
 type NodeSet = set
@@ -78,12 +79,24 @@ def yeh_directed(G):
                 G_phase_1 = contract_nodes_with_edge_addition(G_phase_1.copy(), 't', node)
 
             G_phase_1.add_node('inf')
-            for node in G_phase_1.nodes - {'s', 't'}:
+            for node in G_phase_1.nodes - {'t'}:
                 G_phase_1.add_edge(node, 'inf', capacity=-math.inf)
                 G_phase_1.add_edge('inf', node, capacity=math.inf)
+            ic.ic(G_phase_1.edges)
 
-            G_phase_1 = push_relabel(G_phase_1.copy(), 's', 't', yeh=True)
-            
+            # G_phase_1 = push_relabel(G_phase_1.copy(), 's', 't', yeh=True)
+            max_flow, flow_dict = nx.maximum_flow(G_phase_1, 's', 't', capacity='capacity')
+            print(f'Max flow: {max_flow}')
+            print(f'Flow dict: {flow_dict}')
+            # Update the capacities of the edges
+            for u in G_phase_1.nodes:
+                for v in G_phase_1.nodes:
+                    if (u, v) in G_phase_1.edges:
+                        G_phase_1.edges[u, v]['capacity'] -= abs(flow_dict[u][v])
+                        # if G_phase_1.edges[u, v]['capacity'] == 0:
+                        #     G_phase_1.remove_edge(u, v)
+                        #     G_phase_1.remove_edge(v, u)
+
             G_phase_1.remove_node('t')
             G_phase_1.remove_node('inf')
 
@@ -119,11 +132,22 @@ def yeh_directed(G):
             # plt.show()
             # print("Phase 2")
             
-            G_phase_2 = push_relabel(G_phase_2.copy(), 't', 's', yeh=True)
+            # G_phase_2 = push_relabel(G_phase_2.copy(), 't', 's', yeh=True)
+            max_flow, flow_dict = nx.maximum_flow(G_phase_2, 't', 's', capacity='capacity')
+            print(f'Max flow: {max_flow}')
+            print(f'Flow dict: {flow_dict}')
+            # Update the capacities of the edges
+            for u in G_phase_2.nodes:
+                for v in G_phase_2.nodes:
+                    if (u, v) in G_phase_2.edges:
+                        G_phase_2.edges[u, v]['capacity'] -= abs(flow_dict[u][v])
+                        # if G_phase_2.edges[u, v]['capacity'] == 0:
+                        #     G_phase_2.remove_edge(u, v)
+                        #     G_phase_2.remove_edge(v, u)
 
             # print edges with capacities
-            for u, v in G_phase_2.edges:
-                print(u, v, G_phase_2.edges[u, v]['capacity'], G_phase_2.edges[u, v]['preflow'])
+            # for u, v in G_phase_2.edges:
+            #     print(u, v, G_phase_2.edges[u, v]['capacity'], G_phase_2.edges[u, v]['preflow'])
 
 
             G_phase_2.remove_node('s')
