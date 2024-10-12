@@ -8,6 +8,9 @@ from hao_orlin_original import Partition, hao_orlin
 from push_relabel import push_relabel
 from typing import Union, Tuple
 import matplotlib.pyplot as plt
+from random import randint
+import random
+from networkx.algorithms.flow import shortest_augmenting_path, edmonds_karp
 
 
 type NodeSet = set
@@ -61,9 +64,9 @@ def yeh_directed(G):
         phase_1_partitions = []
         phase_2_partitions = []
 
-        print(f"Partition: {partition.P}")
-        print(f"Min cut: {partition.min_cut} with value {partition.value}")
-        print(f"S: {S}, T: {T}, S_prime: {S_prime}, T_prime: {T_prime}")
+        # print(f"Partition: {partition.P}")
+        # print(f"Min cut: {partition.min_cut} with value {partition.value}")
+        # print(f"S: {S}, T: {T}, S_prime: {S_prime}, T_prime: {T_prime}")
 
         # Phase 1
         if phase_1:
@@ -75,25 +78,43 @@ def yeh_directed(G):
 
             G_phase_1.add_node('t')
             for node in T_prime:
+                #ic(node)
                 G_phase_1 = contract_nodes_with_edge_addition(G_phase_1.copy(), 't', node)
 
             G_phase_1.add_node('inf')
             for node in G_phase_1.nodes - {'t'}:
-                G_phase_1.add_edge(node, 'inf', capacity=-math.inf)
-                G_phase_1.add_edge('inf', node, capacity=math.inf)
+                #ic(node)
+                if node == 's':
+                    G_phase_1.add_edge(node, 'inf', capacity=10000000)
+                    G_phase_1.add_edge('inf', node, capacity=-10000000)
+                else:
+                    G_phase_1.add_edge(node, 'inf', capacity=-10000000)
+                    G_phase_1.add_edge('inf', node, capacity=10000000)
 
             # G_phase_1 = push_relabel(G_phase_1.copy(), 's', 't', yeh=True)
             max_flow, flow_dict = nx.maximum_flow(G_phase_1, 's', 't', capacity='capacity')
-            print(f'Max flow: {max_flow}')
-            print(f'Flow dict: {flow_dict}')
+            # print(f'Max flow: {max_flow}')
+            # print(f'Flow dict: {flow_dict}')
             # Update the capacities of the edges
             for u in G_phase_1.nodes:
                 for v in G_phase_1.nodes:
                     if (u, v) in G_phase_1.edges:
                         G_phase_1.edges[u, v]['capacity'] -= abs(flow_dict[u][v])
-                        # if G_phase_1.edges[u, v]['capacity'] == 0:
-                        #     G_phase_1.remove_edge(u, v)
-                        #     G_phase_1.remove_edge(v, u)
+                        G_phase_1.edges[u, v]['preflow'] = 0
+                        if G_phase_1.edges[u, v]['capacity'] == 0:
+                            G_phase_1.remove_edge(u, v)
+                            G_phase_1.remove_edge(v, u)
+
+            reachable_from_s = set(nx.descendants(G_phase_1, 's')) | {'s'} 
+            #print(reachable_from_s)
+            T_star = set(G_phase_1.nodes()) - reachable_from_s
+            # ic(S_prime)
+            # ic(reachable_from_s)
+            # ic(set(G_phase_1.nodes()) )
+            # ic(T_star)
+            # ic(T_prime)
+            # ic()
+
 
             G_phase_1.remove_node('t')
             G_phase_1.remove_node('inf')
@@ -119,9 +140,13 @@ def yeh_directed(G):
                 G_phase_2 = contract_nodes_with_edge_addition(G_phase_2.copy(), 's', node)
             
             G_phase_2.add_node('inf')
-            for node in G_phase_2.nodes - {'s', 't'}:
-                G_phase_2.add_edge(node, 'inf', capacity= -math.inf)
-                G_phase_2.add_edge('inf', node, capacity=math.inf)
+            for node in G_phase_2.nodes - {'s', 'inf'}:
+                if node == 't':
+                    G_phase_2.add_edge(node, 'inf', capacity=10000000)
+                    G_phase_2.add_edge('inf', node, capacity=-10000000)    
+                else:
+                    G_phase_2.add_edge(node, 'inf', capacity=-10000000)
+                    G_phase_2.add_edge('inf', node, capacity=10000000)
 
             # draw the graph
             # for u, v in G_phase_2.edges:
@@ -132,21 +157,21 @@ def yeh_directed(G):
             
             # G_phase_2 = push_relabel(G_phase_2.copy(), 't', 's', yeh=True)
             max_flow, flow_dict = nx.maximum_flow(G_phase_2, 't', 's', capacity='capacity')
-            print(f'Max flow: {max_flow}')
-            print(f'Flow dict: {flow_dict}')
+            # print(f'Max flow: {max_flow}')
+            # print(f'Flow dict: {flow_dict}')
             # Update the capacities of the edges
             for u in G_phase_2.nodes:
                 for v in G_phase_2.nodes:
                     if (u, v) in G_phase_2.edges:
                         G_phase_2.edges[u, v]['capacity'] -= abs(flow_dict[u][v])
-                        # if G_phase_2.edges[u, v]['capacity'] == 0:
-                        #     G_phase_2.remove_edge(u, v)
-                        #     G_phase_2.remove_edge(v, u)
+                        G_phase_2.edges[u, v]['preflow'] = 0
+                        if G_phase_2.edges[u, v]['capacity'] == 0:
+                            G_phase_2.remove_edge(u, v)
+                            G_phase_2.remove_edge(v, u)
 
             # print edges with capacities
             # for u, v in G_phase_2.edges:
             #     print(u, v, G_phase_2.edges[u, v]['capacity'], G_phase_2.edges[u, v]['preflow'])
-
 
             G_phase_2.remove_node('s')
             G_phase_2.remove_node('inf')
@@ -164,8 +189,8 @@ def yeh_directed(G):
     # Initialize the queue
     queue = PriorityQueue()
     for partition in basic_partition():
-        print(partition.P, partition.min_cut, partition.value)
-        print()
+        # print(partition.P, partition.min_cut, partition.value)
+        # print()
         queue.put(partition)
     
 
@@ -176,7 +201,7 @@ def yeh_directed(G):
         current_partition = queue.get()
         enumerated_cuts.append(current_partition)
         for partition in extract_min_partition(current_partition):
-            print(partition.P, partition.min_cut, partition.value)
+            # print(partition.P, partition.min_cut, partition.value)
             queue.put(partition)
 
     # Add inf cut
@@ -197,8 +222,8 @@ def yeh(G):
     """
     G = nx.convert_node_labels_to_integers(G)
     # print edges with capacities
-    for u, v in G.edges:
-        print(u, v, G.edges[u, v]['capacity'])
+    # for u, v in G.edges:
+    #     print(u, v, G.edges[u, v]['capacity'])
     return yeh_directed(G.to_directed())
 
 
@@ -229,7 +254,23 @@ if __name__ == '__main__':
     G2.add_edge("c", "f", capacity=9)
     G2.add_edge("a", "d", capacity=3)
 
-    cuts = yeh(G)
+    seed=2
 
-    for cut in cuts:
-        print(cut.P, cut.min_cut, cut.value)
+    random.seed(seed)
+    G = nx.gnm_random_graph(7, 20, seed=seed)
+    for u, v in G.edges:
+        G.edges[u, v]['capacity'] = randint(1, 15)
+
+    # print egdes with capacity
+    # for u, v in G.edges:
+    #     print(u, v, G.edges[u, v]['capacity'])
+
+    # draw the graph
+    nx.draw(G)
+    plt.show()
+
+
+    # cuts = yeh(G)
+
+    # for cut in cuts:
+    #     print(cut.P, cut.min_cut, cut.value)

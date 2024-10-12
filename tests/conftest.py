@@ -1,5 +1,7 @@
 import pytest
 import networkx as nx
+from random import randint
+import random
 
 
 @pytest.fixture()
@@ -164,4 +166,25 @@ def max_span_tree_weighted_graph():
         ]
     )
 
+    return G
+
+
+@pytest.fixture()
+def random_graph():
+    seed=2
+
+    random.seed(seed)
+    G = nx.gnm_random_graph(7, 20, seed=seed)
+    for u, v in G.edges:
+        G.edges[u, v]['capacity'] = randint(1, 15)
+    return G
+
+
+@pytest.fixture()
+def molecule_graph():
+    G = nx.read_graphml('data/example_molecules/89.graphml')
+    # Replace attribute 'order' with 'capacity' for all edges
+    for edge in G.edges:
+        G[edge[0]][edge[1]]['capacity'] = G[edge[0]][edge[1]]['order']
+        del G[edge[0]][edge[1]]['order']
     return G

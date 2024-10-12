@@ -3,7 +3,7 @@ import fast_gauss as fg
 import varizani_yannakakis as vy
 
 
-def cut_partition_to_edge_partition(G: nx.DiGraph, cut_partition: vy.ST_partition) -> set:
+def cut_partition_to_edge_partition(G: nx.DiGraph, cut_partition) -> set:
     edge_partition = set()
     for edge in G.edges():
         # print(edge)
@@ -58,6 +58,13 @@ if __name__ == '__main__':
 
     #best_cut = cut_partition_to_edge_partition(G, cuts[0].st_partition)
     #second_best_cut = cut_partition_to_edge_partition(G, cuts[1].st_partition)
+
+    G = nx.Graph()
+    G.add_edge(1, 2, capacity=1)
+    G.add_edge(2, 3, capacity=4)
+    G.add_edge(3, 4, capacity=2)
+    G.add_edge(4, 1, capacity=5)
+    G.add_edge(2, 4, capacity=3)
 
     vectors = (canonical_greedy_cut_basis(G.to_directed()))
     for vector in vectors:
