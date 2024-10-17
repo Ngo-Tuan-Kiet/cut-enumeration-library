@@ -67,7 +67,24 @@ def push_relabel_directed(G, s, t, yeh=False):
                     if G.nodes[u]['excess'] == 0:
                         break
                 else:
-                    relabel(u)
+                    # relabel(u)
+                    # Falls kein Push durchgeführt werden konnte, prüfen wir, ob wir relabeln können
+                    relabel_needed = True  # Annahme: relabel wird benötigt, es sei denn, eine Kante bricht die Bedingung
+                    
+                    for v in G.neighbors(u):
+                        # Überprüfe, ob auf der Kante (u, v) noch Restkapazität vorhanden ist
+                        rest_capacity = G.edges[u, v]['capacity'] - G.edges[u, v]['preflow']
+                        
+                        # Nur Kanten mit Restkapazität sind relevant
+                        if rest_capacity > 0:
+                            # Falls es einen Nachbarn gibt, der die Bedingung height(u) > height(v) verletzt, kein Relabel
+                            if G.nodes[u]['height'] > G.nodes[v]['height']:
+                                relabel_needed = False
+                                break  # Kein Relabel notwendig, wir verlassen die Schleife
+
+                    # Relabel nur durchführen, wenn für alle Kanten mit Restkapazität height(u) <= height(v) gilt
+                    if relabel_needed:
+                        relabel(u)
 
 
     def get_saturated_edges():
