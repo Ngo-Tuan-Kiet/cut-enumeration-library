@@ -49,7 +49,8 @@ def hao_orlin_directed(G, s, yeh=False):
         G.nodes[t_prime]['height'] = 0
 
         for j in N - {t_prime}:
-            G.nodes[j]['height'] = 1
+            if 'height' not in G.nodes[j] or yeh == False:
+                G.nodes[j]['height'] = 1
 
 
     def push(i, j, forced=False):

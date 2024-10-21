@@ -101,9 +101,6 @@ def yeh_directed(G):
                     if (u, v) in G_phase_1.edges:
                         G_phase_1.edges[u, v]['capacity'] -= abs(flow_dict[u][v])
                         G_phase_1.edges[u, v]['preflow'] = 0
-                        if G_phase_1.edges[u, v]['capacity'] == 0:
-                            G_phase_1.remove_edge(u, v)
-                            G_phase_1.remove_edge(v, u)
 
             reachable_from_s = set(nx.descendants(G_phase_1, 's')) | {'s'} 
             #print(reachable_from_s)
@@ -165,9 +162,6 @@ def yeh_directed(G):
                     if (u, v) in G_phase_2.edges:
                         G_phase_2.edges[u, v]['capacity'] -= abs(flow_dict[u][v])
                         G_phase_2.edges[u, v]['preflow'] = 0
-                        if G_phase_2.edges[u, v]['capacity'] == 0:
-                            G_phase_2.remove_edge(u, v)
-                            G_phase_2.remove_edge(v, u)
 
             # print edges with capacities
             # for u, v in G_phase_2.edges:
