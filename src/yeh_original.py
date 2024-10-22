@@ -4,7 +4,7 @@ This file implements Yeh's algorithm using the implementation of the origina Hao
 import networkx as nx
 import math
 from queue import PriorityQueue
-from hao_orlin_original import Partition, hao_orlin
+from hao_orlin_original_modified import Partition, hao_orlin
 from push_relabel import push_relabel
 from typing import Union, Tuple
 
@@ -63,9 +63,7 @@ def yeh_directed(G):
 
         # Phase 1
         if phase_1:
-            #print("jetzt phase1")
             G_phase_1 = G.copy()
-            # Contract the nodes in S and T_prime
             G_phase_1.add_node('s')
             for node in S:
                 G_phase_1 = contract_nodes_with_edge_addition(G_phase_1.copy(), 's', node)
@@ -74,68 +72,39 @@ def yeh_directed(G):
             for node in T: 
                 G_phase_1 = contract_nodes_with_edge_addition(G_phase_1.copy(), 't', node)
 
-            # G_phase_1.add_node('t')
-            # for node in T_prime: 
-            #     G_phase_1 = contract_nodes_with_edge_addition(G_phase_1.copy(), 't', node)
-
             G_phase_1 = push_relabel(G_phase_1.copy(), 's', 't', yeh=True)
             reachable_from_s = set(nx.descendants(G_phase_1, 's')) | {'s'} 
-            #print(reachable_from_s)
             T_star = set(G_phase_1.nodes()) - reachable_from_s
-
-            #print(G_phase_1)
-            #phase1_gf.append(G_phase_1._adj)
-            # print("restgraph aus push-relabel")
-            # print(G_phase_1._adj)
-
             G_phase_1.remove_nodes_from(T_star)
 
             phase_1_partitions = hao_orlin(G_phase_1.copy(), 's', yeh=True)
 
             for partition in phase_1_partitions:
                 partition.P = ((partition.P[0] - set('s')) | S, partition.P[1] | T)
-                partition.min_cut = ((partition.min_cut[0] - set('s')) | S, partition.min_cut[1] | T_prime)
+                partition.min_cut = ((partition.min_cut[0] - set('s')) | S, partition.min_cut[1] | (T_star - {"t"}) | T )
                 partition.value = sum([G.edges[u, v]['capacity'] for u in partition.min_cut[0] for v in partition.min_cut[1] if (u, v) in G.edges])
-        
 
         # Phase 2
         if phase_2:
-            #print("jetzt phase 2")
             G_phase_2 = G.copy().reverse()
-            # Contract the nodes in T and S_prime
             G_phase_2.add_node('t')
             for node in T:
                 G_phase_2 = contract_nodes_with_edge_addition(G_phase_2.copy(), 't', node)
             G_phase_2.add_node('s')
             for node in S:
                 G_phase_2 = contract_nodes_with_edge_addition(G_phase_2.copy(), 's', node)
-            # for edge in G2.edges(data=True):
-            #     u, v, data = edge
-            #     print(f"Edge: {u} -> {v}")
-            #     print(f"Capacity: {data.get('capacity', 'No capacity attribute')}")
-            #     print(f"Preflow: {data.get('preflow', 'No preflow attribute')}")
-            #     print()
+    
 
             G_phase_2 = push_relabel(G_phase_2.copy(), 't', 's', yeh=True)
-            reachable_from_t = set(nx.descendants(G_phase_2, 't')) | {'t'} 
-            #print(reachable_from_t)
+            reachable_from_t = set(nx.descendants(G_phase_2, 't')) | {'t'}
             S_star = set(G_phase_2.nodes()) - reachable_from_t
-
-            #print(G_phase_1)
-            #phase1_gf.append(G_phase_1._adj)
-            # print("restgraph aus push-relabel")
-            # print(G_phase_1._adj)
-
             G_phase_2.remove_nodes_from(S_star)
-            #print(u_o)
-            
-            #G_phase_2.remove_node('s')
 
             phase_2_partitions = hao_orlin(G_phase_2.copy(), 't', yeh=True)
 
             for partition in phase_2_partitions:
-                partition.P = (partition.P[1] | S_prime, (partition.P[0] - set('t')) | T)
-                partition.min_cut = (partition.min_cut[1] | S_prime, (partition.min_cut[0] - set('t')) | T)
+                partition.P = (partition.P[1] | S, (partition.P[0] - set('t')) | T)
+                partition.min_cut = (partition.min_cut[1] | (S_star - {"s"}) | S , (partition.min_cut[0] - set('t')) | T)
                 partition.value = sum([G.edges[u, v]['capacity'] for u in partition.min_cut[0] for v in partition.min_cut[1] if (u, v) in G.edges])
 
         return phase_1_partitions + phase_2_partitions
@@ -225,50 +194,8 @@ if __name__ == '__main__':
     G2.add_edge("a", "d", capacity=3)
 
 cuts = yeh(G)
-#cuts_G3=yeh(G3)
-# print(len(cuts))
-# print(len(cuts_G3))
-# print(cuts)
-# print(cuts_G3)
-# print("------------------")
-
-    # count=0
-    # for ele in cuts:
-    #     if ele not in cuts_G3:
-    #         count=count+1
-    #         print(ele)
-    # print(count)
-
-    # if cuts==cuts_G3:
-    #     print(yes)
 
 for cut in cuts:
     print(cut.P, cut.min_cut, cut.value)
     
-    # G_mapped=nx.convert_node_labels_to_integers(G)
-    # print(G_mapped)
-
-    # print("Knoten und ihre Attribute:")
-    # print(G.nodes(data=True))
-
-    # # Kanten und ihre Attribute anzeigen
-    # print("Kanten und ihre Attribute:")
-    # print(G.edges(data=True))
-
-    # # Interne Knotenstruktur anzeigen
-    # print("Interne Knotenstruktur:")
-    # print(G._node)
-
-    # # Interne Kantenstruktur anzeigen
-    # G_arch=G._adj
-    # G3_arch=G3._adj
-    # print("Interne Kantenstruktur:")
-    # print(G._adj)
-
-    # if nx.is_isomorphic(G, G3):
-    #     print("ja")
-    # for node in G.nodes:
-    #     print(node)
-
-    # for node in G3.nodes:
-    #     print(node)
+    
