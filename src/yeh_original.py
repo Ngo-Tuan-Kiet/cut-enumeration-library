@@ -64,8 +64,6 @@ def yeh_directed(G):
             G_res = contract_nodes_with_edge_addition(G_res, 't', node)
 
         G_res_flow, S_prime, T_prime, value = push_relabel(G_res, 's', 't', yeh=True)
-        if value != partition.value:
-            print(f'Error: {value} != {partition.value} at {partition.P} with min-cut {partition.min_cut}')
 
         # Calculate the residual capacities of the edges
         for u in set(G_res_flow.nodes):
