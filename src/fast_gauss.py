@@ -1,5 +1,5 @@
 #Note : The matay should have elements of the field GF(2) -- Only 0/1 
-def fast_guass(mat): #m rows and n columns
+def fast_gauss(mat): #m rows and n columns
 
     m_row = len(mat)
     n_col = len(mat[0])
@@ -34,7 +34,7 @@ def fast_guass(mat): #m rows and n columns
     return (mat,pivot,pivot_col_to_row)
 
 def has_dependent_rows(original_mat):
-    mat, pivot, _ = fast_guass(original_mat)
+    mat, pivot, _ = fast_gauss(original_mat)
 
     m_row = len(mat)
     

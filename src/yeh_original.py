@@ -71,12 +71,18 @@ def yeh_directed(G):
         for u in set(G_res_flow.nodes):
             for v in G_res_flow.neighbors(u):
                 G_res_flow[u][v]['capacity'] = G_res_flow[u][v]['capacity'] - abs(G_res_flow[u][v]['preflow'])
+                G_res_flow[u][v]['preflow'] = 0
+                G_res_flow[u][v]['flow'] = 0
         
         # Remove edges with zero capacity
         for u in set(G_res_flow.nodes):
             for v in set(G_res_flow.neighbors(u)):
                 if G_res_flow[u][v]['capacity'] == 0:
                     G_res_flow.remove_edge(u, v)
+
+        # Set node excesses to zero
+        for node in G_res_flow.nodes:
+            G_res_flow.nodes[node]['excess'] = 0
         
         # Determine necessity of phases
         q = len(S_prime - S)
@@ -88,7 +94,7 @@ def yeh_directed(G):
             G_res_p1.remove_nodes_from(T_prime)
             assert set(G_res_p1.nodes) == S_prime
 
-            p1_list = hao_orlin(G_res_p1, 's', yeh=True)
+            p1_list = hao_orlin(G_res_p1, 's', yeh=True, reset=False)
 
             for partition in p1_list:
                 partition.P = ((partition.P[0] - {'s'}) | S, partition.P[1] | T)
@@ -102,7 +108,7 @@ def yeh_directed(G):
             G_res_p2.reverse()
             assert set(G_res_p2.nodes) == T_prime
 
-            p2_list = hao_orlin(G_res_p2, 't', yeh=True)
+            p2_list = hao_orlin(G_res_p2, 't', yeh=True, reset=False)
 
             for partition in p2_list:
                 partition.P = (partition.P[1] | (S_prime - {'s'}) | S, (partition.P[0] - {'t'}) | T)
@@ -138,22 +144,3 @@ def yeh(G):
     Wrapper function for undirected graphs.
     """
     return yeh_directed(G.to_directed())
-
-
-if __name__ == '__main__':
-    # Example usage
-    G = nx.Graph()
-    G.add_edge('A', 'B', capacity=3)
-    G.add_edge('A', 'C', capacity=2)
-    G.add_edge('B', 'C', capacity=1)
-    G.add_edge('B', 'E', capacity=3)
-    G.add_edge('C', 'D', capacity=8)
-    G.add_edge('E', 'F', capacity=4)
-    G.add_edge('D', 'F', capacity=2)
-    G.add_edge('B', 'D', capacity=4)
-    G.add_edge('E', 'D', capacity=4)
-
-    cuts = yeh(G)
-
-    for cut in cuts:
-        print(cut.P, cut.min_cut, cut.value)

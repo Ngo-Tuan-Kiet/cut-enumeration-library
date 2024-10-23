@@ -25,7 +25,7 @@ class Partition:
         return f'Partition with value {self.value}'
 
 
-def hao_orlin_directed(G, s, yeh=False):
+def hao_orlin_directed(G, s, yeh=False, reset=True):
     """
     This function implements the Hao-Orlin algorithm for directed graphs.
     """
@@ -33,24 +33,25 @@ def hao_orlin_directed(G, s, yeh=False):
         """
         This function initializes the graph for the Hao-Orlin algorithm.
         """
-        # Necessary initialization of the graph
-        for i in N:
-            G.nodes[i]['excess'] = 0
+        if reset:
+            # Necessary initialization of the graph
+            for i in N:
+                G.nodes[i]['excess'] = 0
 
-        for (i, j) in G.edges:
-            G.edges[i, j]['flow'] = 0
-            G.edges[j, i]['flow'] = 0
-        
-        # ModifiedInitialize from the paper
-        for j in N - {t_prime} - s:
-            G.nodes[j]['height'] = 1
+            for (i, j) in G.edges:
+                G.edges[i, j]['flow'] = 0
+                G.edges[j, i]['flow'] = 0
+            
+            # ModifiedInitialize from the paper
+            for j in N - {t_prime} - {s}:
+                if 'height' not in G.nodes[j] or yeh == False:
+                    G.nodes[j]['height'] = 1
 
         G.nodes[t_prime]['height'] = 0
+        G.nodes[s]['excess'] = len(G.nodes)
 
-        for node in s:
-            G.nodes[node]['excess'] = len(G.nodes)
-            for j in G.neighbors(node):
-                push(node, j, forced=True)
+        for j in G.neighbors(s):
+            push(s, j, forced=True)
 
 
     def push(i, j, forced=False):
@@ -147,9 +148,7 @@ def hao_orlin_directed(G, s, yeh=False):
     # Initialize variables
     N = set(G.nodes)
     n = len(N)
-    if type(s) != set:
-        s = {s}
-    S = s
+    S = {s}
     t_prime = list(N - S)[0]
     dormant_nodes = [set() for _ in range(n)]
     dormant_nodes[0] = S.copy()
@@ -189,5 +188,5 @@ def hao_orlin_directed(G, s, yeh=False):
         return yeh_list
 
 
-def hao_orlin(G, s, yeh=False):
-    return hao_orlin_directed(G, s, yeh) if G.is_directed() else hao_orlin_directed(G.to_directed(), s, yeh)
+def hao_orlin(G, s, yeh=False, reset=True):
+    return hao_orlin_directed(G, s, yeh, reset) if G.is_directed() else hao_orlin_directed(G.to_directed(), s, yeh, reset)

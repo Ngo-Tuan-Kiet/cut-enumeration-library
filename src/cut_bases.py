@@ -1,6 +1,6 @@
 import networkx as nx
 import fast_gauss as fg
-import varizani_yannakakis as vy
+import vazirani_yannakakis as vy
 
 
 def cut_partition_to_edge_partition(G: nx.DiGraph, cut_partition) -> set:
@@ -45,30 +45,3 @@ def canonical_greedy_cut_basis(G: nx.Graph) -> list[list[int]]:
             edge_vectors.pop()
 
     return edge_vectors
-
-if __name__ == '__main__':
-    G = nx.read_graphml('data/example_molecules/89.graphml')
-
-    # Replace attribute 'order' with 'capacity' for all edges
-    for edge in G.edges:
-        G[edge[0]][edge[1]]['capacity'] = G[edge[0]][edge[1]]['order']
-        del G[edge[0]][edge[1]]['order']
-
-    # cuts = vy.varizani_yannakakis(G)
-
-    #best_cut = cut_partition_to_edge_partition(G, cuts[0].st_partition)
-    #second_best_cut = cut_partition_to_edge_partition(G, cuts[1].st_partition)
-
-    G = nx.Graph()
-    G.add_edge(1, 2, capacity=1)
-    G.add_edge(2, 3, capacity=4)
-    G.add_edge(3, 4, capacity=2)
-    G.add_edge(4, 1, capacity=5)
-    G.add_edge(2, 4, capacity=3)
-
-    vectors = (canonical_greedy_cut_basis(G.to_directed()))
-    for vector in vectors:
-        print(vector)
-
-    for edge in G.to_directed().edges():
-        print(edge)

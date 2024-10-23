@@ -1,7 +1,7 @@
 import networkx as nx
 import pytest
 from math import inf
-from src.varizani_yannakakis import varizani_yannakakis, collapse_graph, Cut
+from src.vazirani_yannakakis import vazirani_yannakakis, collapse_graph, Cut
 from src.cut_bases import cut_partition_to_edge_partition
 
 
@@ -19,7 +19,7 @@ from src.cut_bases import cut_partition_to_edge_partition
                         ('networkx_example_weighted_graph', {'value': 3, 'st_partition': ({'a','b' , 'd'}, {'c', 'e', 'f'})})
                         ])
 def test_yannakakis_best_cut(request, graph, min_cut):
-    cuts: list[Cut] = varizani_yannakakis(request.getfixturevalue(graph))
+    cuts: list[Cut] = vazirani_yannakakis(request.getfixturevalue(graph))
     assert cuts[0].value == min_cut['value']
     assert cuts[0].st_partition == min_cut['st_partition'] or cuts[0].st_partition == (min_cut['st_partition'][1], min_cut['st_partition'][0])
 
@@ -36,7 +36,7 @@ def test_yannakakis_best_cut(request, graph, min_cut):
                         ('networkx_example_weighted_graph', {'value': 4, 'st_partition': ({'d'}, {'a', 'b', 'c', 'e', 'f'})})
                         ])
 def test_yannakakis_second_best_cut(request, graph, second_min_cut):
-    cuts: list[Cut] = varizani_yannakakis(request.getfixturevalue(graph))
+    cuts: list[Cut] = vazirani_yannakakis(request.getfixturevalue(graph))
     assert cuts[1].value == second_min_cut['value']
     assert cuts[1].st_partition == second_min_cut['st_partition'] or cuts[1].st_partition == (second_min_cut['st_partition'][1], second_min_cut['st_partition'][0])
 
@@ -52,7 +52,7 @@ def test_yannakakis_second_best_cut(request, graph, second_min_cut):
                                    'random_graph',
                                    'molecule_graph'])
 def test_yannakakis_non_decreasing_order(request, graph):
-    cuts: list[Cut] = varizani_yannakakis(request.getfixturevalue(graph))
+    cuts: list[Cut] = vazirani_yannakakis(request.getfixturevalue(graph))
     values = [cut.value for cut in cuts]
     assert values == sorted(values)
 
@@ -67,21 +67,21 @@ def test_yannakakis_non_decreasing_order(request, graph):
                                    'random_graph',
                                    'molecule_graph'])
 def test_yannakakis_number_of_cuts(request, graph):
-    cuts: list[Cut] = varizani_yannakakis(request.getfixturevalue(graph))
+    cuts: list[Cut] = vazirani_yannakakis(request.getfixturevalue(graph))
     assert len(cuts) == 2**(len(request.getfixturevalue(graph).nodes) - 1)
 
 # TODO: Test has to be inserted, if we know how to deal witth duplicate partitions
 '''
 @pytest.mark.parametrize('graph', ['undirected_triangle', 'single_edge_graph', 'single_node_graph', 'complex_graph', 'star_graph'])
 def test_yannakakis_no_duplicated_partitions(request, graph):
-    cuts = varizani_yannakakis(request.getfixturevalue(graph))
+    cuts = vazirani_yannakakis(request.getfixturevalue(graph))
     partitions = [frozenset(frozenset(part) for part in cut[1]) for cut in cuts] # frozenset because set is not hashable
     assert len(partitions) == len(set(partitions))
 '''
 
 
 def test_yannakakis_single_node(single_node_graph):
-    cuts = varizani_yannakakis(single_node_graph)
+    cuts = vazirani_yannakakis(single_node_graph)
     with pytest.raises(IndexError):
         cuts[2]
 
@@ -125,7 +125,7 @@ def test_collapse_graph_complex_graph(complex_graph):
                         #('star_graph', (10, ({1, 2, 4}, {3})))
                         ])
 def test_cut_partition_to_edge_partition(request, graph, edge_cut):
-    cuts: list[Cut] = varizani_yannakakis(request.getfixturevalue(graph))
+    cuts: list[Cut] = vazirani_yannakakis(request.getfixturevalue(graph))
     min_edge_cut = cut_partition_to_edge_partition(request.getfixturevalue(graph), cuts[0].st_partition)
     assert min_edge_cut == edge_cut
 

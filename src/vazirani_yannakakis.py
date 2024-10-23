@@ -212,7 +212,7 @@ def get_original_partition(G: nx.DiGraph, partition: ST_partition, mother: str) 
     return original_partition
 
 
-def varizani_yannakakis_directed(G: nx.DiGraph) -> list[Cut]:
+def vazirani_yannakakis_directed(G: nx.DiGraph) -> list[Cut]:
     """
     Varizani-Yannakakis algorithm for enumerating all min-cuts of a graph G.
     """
@@ -253,7 +253,7 @@ def varizani_yannakakis_directed(G: nx.DiGraph) -> list[Cut]:
     return enumerated_cuts
 
 
-def greedy_varizani_yannakakis_directed(G: nx.DiGraph) -> list[Cut]:
+def greedy_vazirani_yannakakis_directed(G: nx.DiGraph) -> list[Cut]:
     """
     Combination of the Varizani-Yannakakis algorithm and the greedy algorithm for computing a cut basis of the graph G.
     """
@@ -304,48 +304,11 @@ def greedy_varizani_yannakakis_directed(G: nx.DiGraph) -> list[Cut]:
             queue.put(Cut(child_min_value, {'st_partition': child_min_partition, 'partition_vector': child_min_vector, 'mother': child_vector}))
 
 
-def varizani_yannakakis(G: nx.DiGraph | nx.Graph, greedy=False) -> list[Cut]:
+def vazirani_yannakakis(G: nx.DiGraph | nx.Graph, greedy=False) -> list[Cut]:
     """
     Wrapper function for the Varizani-Yannakakis algorithm that works with directed and undirected graphs.
     """
     if greedy == False:
-        return varizani_yannakakis_directed(G) if G.is_directed() else varizani_yannakakis_directed(G.to_directed())
+        return vazirani_yannakakis_directed(G) if G.is_directed() else vazirani_yannakakis_directed(G.to_directed())
     else:
-        return greedy_varizani_yannakakis_directed(G) if G.is_directed() else greedy_varizani_yannakakis_directed(G.to_directed())
-
-
-if __name__ == '__main__':
-    G = nx.read_graphml('data/example_molecules/89.graphml')
-
-    # Replace attribute 'order' with 'capacity' for all edges
-    for edge in G.edges:
-        G[edge[0]][edge[1]]['capacity'] = G[edge[0]][edge[1]]['order']
-        del G[edge[0]][edge[1]]['order']
-
-    t0 = time.time()
-    complete_cut_set = (varizani_yannakakis(G))
-    t1 = time.time()
-    print(t1 - t0)
-
-
-    # G = nx.DiGraph()
-    # G.add_edge(1, 2, capacity=10)
-    # G.add_edge(2, 1, capacity=10)
-
-    # G.add_edge(2, 3, capacity=10)
-    # G.add_edge(3, 2, capacity=10)
-
-    # G.add_edge(2, 4, capacity=1)
-    # G.add_edge(4, 2, capacity=1)
-
-    # G2 = nx.DiGraph()
-    # G2.add_edge(1, 2, capacity=1)
-    # G2.add_edge(2, 3, capacity=2)
-    # G2.add_edge(3, 1, capacity=3)
-
-    # G = collapse_graph(G, '001')
-    # pos = nx.spring_layout(G)
-    # edges = {edge: G[edge[0]][edge[1]]['capacity'] for edge in G.edges}
-    # nx.draw(G, pos, with_labels=True)
-    # nx.draw_networkx_edge_labels(G, pos, edge_labels=edges)
-    # plt.show()
+        return greedy_vazirani_yannakakis_directed(G) if G.is_directed() else greedy_vazirani_yannakakis_directed(G.to_directed())

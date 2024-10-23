@@ -1,7 +1,7 @@
 import networkx as nx
 import pytest
 from math import inf
-from src.varizani_yannakakis import varizani_yannakakis, collapse_graph, Cut
+from src.vazirani_yannakakis import vazirani_yannakakis, collapse_graph, Cut
 from src.cut_bases import cut_partition_to_edge_partition
 from src.yeh_original import yeh
 
@@ -22,8 +22,8 @@ def test_yeh(request, graph):
 
     cut_values = [cut.value for cut in cuts]
 
-    varizani_yannakakis_cuts = varizani_yannakakis(request.getfixturevalue(graph))
-    varizani_yannakakis_cut_values = [cut.value for cut in varizani_yannakakis_cuts]
+    vazirani_yannakakis_cuts = vazirani_yannakakis(request.getfixturevalue(graph))
+    vazirani_yannakakis_cut_values = [cut.value for cut in vazirani_yannakakis_cuts]
 
-    assert cut_values == varizani_yannakakis_cut_values
+    assert cut_values == vazirani_yannakakis_cut_values
     
