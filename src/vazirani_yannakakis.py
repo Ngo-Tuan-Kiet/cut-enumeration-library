@@ -5,7 +5,6 @@ from queue import PriorityQueue
 from typing import Tuple, Union
 import cut_bases as cb
 import fast_gauss as fg
-import time
 
 
 # Type definitions congruent with output of min_cut method in networkx (tuple of mi-cut value and ST-partition)

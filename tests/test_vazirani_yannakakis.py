@@ -1,4 +1,3 @@
-import networkx as nx
 import pytest
 from math import inf
 from src.vazirani_yannakakis import vazirani_yannakakis, collapse_graph, Cut

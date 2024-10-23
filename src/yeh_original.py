@@ -7,7 +7,6 @@ from queue import PriorityQueue
 from hao_orlin_original import Partition, hao_orlin
 from push_relabel import push_relabel
 from typing import Union, Tuple
-import time
 
 
 type NodeSet = set

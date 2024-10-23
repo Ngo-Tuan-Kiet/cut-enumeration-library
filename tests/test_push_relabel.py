@@ -1,9 +1,6 @@
 import pytest
-import networkx as nx
 from networkx.algorithms.flow import minimum_cut
 import src.push_relabel as pr
-import src.vazirani_yannakakis as vy
-import src.hao_orlin_original as ho
 
 @pytest.mark.parametrize('s, t', [
     (1, 2),

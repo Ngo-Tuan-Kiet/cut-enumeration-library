@@ -1,5 +1,4 @@
 import pytest
-import networkx as nx
 from networkx.algorithms.flow import minimum_cut
 import src.push_relabel as pr
 import src.vazirani_yannakakis as vy
