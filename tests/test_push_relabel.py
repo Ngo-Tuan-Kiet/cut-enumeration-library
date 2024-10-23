@@ -94,6 +94,49 @@ def test_push_relabel_networkx_example_weighted_graph(networkx_example_weighted_
     nx_min_cut = minimum_cut(G2, s, t)[0]
     assert min_cut == nx_min_cut
 
+@pytest.mark.parametrize('s, t', [
+    ('A', 'B'),
+    ('A', 'C'),
+    ('A', 'D'),
+    ('A', 'E'),
+    ('A', 'F'),
+    ('B', 'A'),
+    ('B', 'C'),
+    ('B', 'D'),
+    ('B', 'E'),
+    ('B', 'F'),
+    ('C', 'A'),
+    ('C', 'B'),
+    ('C', 'D'),
+    ('C', 'E'),
+    ('C', 'F'),
+    ('D', 'A'),
+    ('D', 'B'),
+    ('D', 'C'),
+    ('D', 'E'),
+    ('D', 'F'),
+    ('E', 'A'),
+    ('E', 'B'),
+    ('E', 'C'),
+    ('E', 'D'),
+    ('E', 'F'),
+    ('F', 'A'),
+    ('F', 'B'),
+    ('F', 'C'),
+    ('F', 'D'),
+    ('F', 'E')
+])
+
+
+def test_push_relabel_icl_weighted_graph(icl_weighted_graph, s, t):
+    G = icl_weighted_graph
+    G2 = G.copy()
+
+    min_cut = pr.push_relabel(G, s, t)[0]
+
+    nx_min_cut = minimum_cut(G2, s, t)[0]
+    assert min_cut == nx_min_cut
+
 
 @pytest.mark.parametrize('s, t', [
 (0, 1),
@@ -169,8 +212,61 @@ def test_push_relabel_networkx_example_weighted_graph(networkx_example_weighted_
 (8, 6),
 (8, 7)
 ])
-def test_push_max_span_tree(max_span_tree_weighted_graph, s, t):
+def test_push_relabel_max_span_tree(max_span_tree_weighted_graph, s, t):
     G = max_span_tree_weighted_graph
+    G2 = G.copy()
+
+    min_cut = pr.push_relabel(G, s, t)[0]
+
+    nx_min_cut = minimum_cut(G2, s, t)[0]
+    assert min_cut == nx_min_cut
+
+@pytest.mark.parametrize('s, t', [
+    (0, 1),
+    (0, 2),
+    (0, 3),
+    (0, 4),
+    (0, 5),
+    (0, 6),
+    (1, 0),
+    (1, 2),
+    (1, 3),
+    (1, 4),
+    (1, 5),
+    (1, 6),
+    (2, 0),
+    (2, 1),
+    (2, 3),
+    (2, 4),
+    (2, 5),
+    (2, 6),
+    (3, 0),
+    (3, 1),
+    (3, 2),
+    (3, 4),
+    (3, 5),
+    (3, 6),
+    (4, 0),
+    (4, 1),
+    (4, 2),
+    (4, 3),
+    (4, 5),
+    (4, 6),
+    (5, 0),
+    (5, 1),
+    (5, 2),
+    (5, 3),
+    (5, 4),
+    (5, 6),
+    (6, 0),
+    (6, 1),
+    (6, 2),
+    (6, 3),
+    (6, 4),
+    (6, 5)
+])
+def test_push_relabel_random_graph(random_graph, s, t):
+    G = random_graph
     G2 = G.copy()
 
     min_cut = pr.push_relabel(G, s, t)[0]

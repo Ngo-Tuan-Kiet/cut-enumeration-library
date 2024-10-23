@@ -5,17 +5,19 @@ from typing import Union
 
 type Cut_value = Union[int, float]
 
-
 class Partition:
-    def __init__(self, value, data):
-        self.value: Cut_value = value
+    def __init__(self, data):
+        self.value: Cut_value = data['value']
         self.P = data['P']
         self.min_cut = data['cut']
-        self.residual_graph: nx.Graph = data['residual_graph']
+        self.residual_graph = data['residual_graph']
 
     def __lt__(self, other):
         return self.value < other.value
     
+    def __eq__(self, other):
+        return self.value == other.value and self.min_cut == other.min_cut
+
     def __str__(self):
         return f'Partition with value {self.value}'
 
@@ -28,7 +30,10 @@ def hao_orlin_directed(G, s) -> list[Partition]:
         """
         for v in G.nodes:
             G.nodes[v]['excess'] = 0
-            G.nodes[v]['height'] = 0
+            # check if height is already an attribute
+            if 'height' not in G.nodes[v]:
+                print('Height not in G.nodes')
+                G.nodes[v]['height'] = 0
         G.nodes[s]['excess'] = math.inf
         G.nodes[s]['height'] = len(G.nodes)
         
@@ -103,8 +108,8 @@ def hao_orlin_directed(G, s) -> list[Partition]:
         for v in G.neighbors(u):
             if G.nodes[u]['height'] == G.nodes[v]['height'] + 1 and G.edges[u, v]['capacity'] - G.edges[u, v]['preflow'] > 0 and v not in X and G.nodes[u]['excess'] > 0:
                 push(u, v)
-                return  
-
+                # return  
+                
         relabel(u)
 
 
@@ -203,7 +208,7 @@ def hao_orlin_directed(G, s) -> list[Partition]:
         # for edge in residual_graph.edges:
         #     print(f'Edge {edge} with capacity {residual_graph.edges[edge[0], edge[1]]["capacity"]}')
 
-        yeh_list.append(Partition(min_cut_value, {'P': P, 'cut': cut, 'residual_graph': residual_graph}))
+        yeh_list.append(Partition({'value': min_cut_value, 'P': P, 'cut': cut, 'residual_graph': G.copy()}))
 
         X.add(t)
         G.nodes[t]['height'] = n

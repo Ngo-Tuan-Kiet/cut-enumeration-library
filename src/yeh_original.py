@@ -154,6 +154,6 @@ if __name__ == '__main__':
     G.add_edge('E', 'D', capacity=4)
 
     cuts = yeh(G)
-    print('\nEnumerated cuts:')
+
     for cut in cuts:
-        print(f'Value: {cut.value}, P: {cut.P}, min-cut: {cut.min_cut}')
+        print(cut.P, cut.min_cut, cut.value)
