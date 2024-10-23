@@ -14,7 +14,6 @@ class Partition:
         self.value: Cut_value = data['value']
         self.P = data['P']
         self.min_cut = data['cut']
-        self.residual_graph = data['residual_graph']
 
     def __lt__(self, other):
         return self.value < other.value
@@ -41,15 +40,17 @@ def hao_orlin_directed(G, s, yeh=False):
         for (i, j) in G.edges:
             G.edges[i, j]['flow'] = 0
             G.edges[j, i]['flow'] = 0
-
+        
         # ModifiedInitialize from the paper
-        for j in G.neighbors(s):
-            push(s, j, forced=True)
+        for j in N - {t_prime} - s:
+            G.nodes[j]['height'] = 1
 
         G.nodes[t_prime]['height'] = 0
 
-        for j in N - {t_prime}:
-            G.nodes[j]['height'] = 1
+        for node in s:
+            G.nodes[node]['excess'] = len(G.nodes)
+            for j in G.neighbors(node):
+                push(node, j, forced=True)
 
 
     def push(i, j, forced=False):
@@ -57,7 +58,7 @@ def hao_orlin_directed(G, s, yeh=False):
         This function pushes flow from node i to node j. A forced push is a push that saturates all edges emanating from i without stopping when the excess of i is zero.
         """
         if not forced:
-            delta = min(G.nodes[i]['excess'], G.edges[i, j]['capacity'] - G.edges[i, j]['flow']) # TODO: Check if this is correct
+            delta = min(G.nodes[i]['excess'], G.edges[i, j]['capacity'] - G.edges[i, j]['flow'])
         else:
             delta = G.edges[i, j]['capacity'] - G.edges[i, j]['flow']
 
@@ -96,7 +97,9 @@ def hao_orlin_directed(G, s, yeh=False):
         """
         This function calculates the cut value of the graph.
         """
-        return sum(G.edges[i, j]['capacity'] for i in S for j in G.neighbors(i) if j not in S) if S != N else math.inf
+        source_side = S
+        sink_side = N - S
+        return sum([G.edges[u, v]['capacity'] for u in source_side for v in sink_side if G.has_edge(u, v)])
     
 
     def select_new_sink():
@@ -138,16 +141,18 @@ def hao_orlin_directed(G, s, yeh=False):
         return i in awake_nodes and j in awake_nodes and G.edges[i, j]['capacity'] - G.edges[i, j]['flow'] > 0 and G.nodes[i]['height'] == G.nodes[j]['height'] + 1
 
     
-    if len(G.nodes) == 1:
+    if len(G.nodes) <= 1:
         return []
 
     # Initialize variables
     N = set(G.nodes)
     n = len(N)
-    S = {s}
+    if type(s) != set:
+        s = {s}
+    S = s
     t_prime = list(N - S)[0]
     dormant_nodes = [set() for _ in range(n)]
-    dormant_nodes[0].add(s)
+    dormant_nodes[0] = S.copy()
     D_max = 0
     awake_nodes = N - S
     best_value = math.inf
@@ -174,7 +179,7 @@ def hao_orlin_directed(G, s, yeh=False):
                 best_value = cut_value
                 best_cut = (N - awake_nodes, awake_nodes.copy())
         else:
-            yeh_list.append(Partition({'value': cut_value, 'P': P, 'cut': cut, 'residual_graph': G.copy()}))
+            yeh_list.append(Partition({'value': cut_value, 'P': P, 'cut': cut,}))
         
         select_new_sink()
 

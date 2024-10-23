@@ -51,115 +51,71 @@ def yeh_directed(G):
         """
         This function extracts the minimum partition from the given partition.
         """
-        # Define variables, calculate need of phases
-        S, T = partition.P
-        S_prime, T_prime = partition.min_cut
+        S = partition.P[0]
+        T = partition.P[1]
+
+        # Reproduce the residual graph from Hao-Orlin
+        G_res = G.copy()
+        G_res.add_node('s')
+        G_res.add_node('t')
+        for node in S:
+            G_res = contract_nodes_with_edge_addition(G_res, 's', node)
+        for node in T:
+            G_res = contract_nodes_with_edge_addition(G_res, 't', node)
+
+        G_res_flow, S_prime, T_prime, value = push_relabel(G_res, 's', 't', yeh=True)
+        if value != partition.value:
+            print(f'Error: {value} != {partition.value} at {partition.P} with min-cut {partition.min_cut}')
+
+        # Calculate the residual capacities of the edges
+        for u in set(G_res_flow.nodes):
+            for v in G_res_flow.neighbors(u):
+                G_res_flow[u][v]['capacity'] = G_res_flow[u][v]['capacity'] - abs(G_res_flow[u][v]['preflow'])
         
-        phase_1 = True if len(S_prime) > len(S) else False
-        phase_2 = True if len(T_prime) > len(T) else False
-
-        phase_1_partitions = []
-        phase_2_partitions = []
-
-        print(f"Partition: {partition.P}")
-        print(f"Min cut: {partition.min_cut} with value {partition.value}")
-        print(f"S: {S}, T: {T}, S_prime: {S_prime}, T_prime: {T_prime}")
-
-        # Phase 1
-        if phase_1:
-            G_phase_1 = G.copy()
-            # Contract the nodes in S and T_prime
-            G_phase_1.add_node('s')
-            for node in S:
-                G_phase_1 = contract_nodes_with_edge_addition(G_phase_1.copy(), 's', node)
-
-            G_phase_1.add_node('t')
-            for node in T_prime:
-                G_phase_1 = contract_nodes_with_edge_addition(G_phase_1.copy(), 't', node)
-
-            #G_phase_1 = push_relabel(G_phase_1.copy(), 's', 't', yeh=True)
-            
-            max_flow, flow_dict = nx.maximum_flow(G_phase_1, 's', 't', capacity='capacity')
-            print(f'Max flow: {max_flow}')
-            print(f'Flow dict: {flow_dict}')
-            # Update the capacities of the edges
-            for u in G_phase_1.nodes:
-                for v in G_phase_1.nodes:
-                    if (u, v) in G_phase_1.edges:
-                        G_phase_1.edges[u, v]['capacity'] -= abs(flow_dict[u][v])
-                        # if G_phase_1.edges[u, v]['capacity'] == 0:
-                        #     G_phase_1.remove_edge(u, v)
-                        #     G_phase_1.remove_edge(v, u)
-
-            G_phase_1.remove_node('t')
-
-            phase_1_partitions = hao_orlin(G_phase_1.copy(), 's', yeh=True)
-
-            for partition_1 in phase_1_partitions:
-                partition_1.P = ((partition_1.P[0] - set('s')) | S, partition_1.P[1] | T)
-                partition_1.min_cut = ((partition_1.min_cut[0] - set('s')) | S, partition_1.min_cut[1] | T_prime)
-                partition_1.value = sum([G.edges[u, v]['capacity'] for u in partition_1.min_cut[0] for v in partition_1.min_cut[1] if (u, v) in G.edges])
+        # Remove edges with zero capacity
+        for u in set(G_res_flow.nodes):
+            for v in set(G_res_flow.neighbors(u)):
+                if G_res_flow[u][v]['capacity'] == 0:
+                    G_res_flow.remove_edge(u, v)
         
+        # Determine necessity of phases
+        q = len(S_prime - S)
+        r = len(T_prime - T)
 
-        # Phase 2
-        if phase_2:
-            G_phase_2 = G.copy().reverse()
-            # Contract the nodes in T and S_prime
-            G_phase_2.add_node('t')
-            for node in T:
-                G_phase_2 = contract_nodes_with_edge_addition(G_phase_2.copy(), 't', node)
-            G_phase_2.add_node('s')
-            for node in S_prime:
-                G_phase_2 = contract_nodes_with_edge_addition(G_phase_2.copy(), 's', node)
+        if q > 0:
+            # Phase 1
+            G_res_p1 = G_res_flow.copy()
+            G_res_p1.remove_nodes_from(T_prime)
+            assert set(G_res_p1.nodes) == S_prime
 
-            print(f'Node info: {G_phase_2.nodes.data(True)}')
-            print(f'Edge info: {G_phase_2.edges.data(True)}')
+            p1_list = hao_orlin(G_res_p1, 's', yeh=True)
 
-            
-            #G_phase_2 = push_relabel(G_phase_2.copy(), 't', 's', yeh=True)
-            max_flow, flow_dict = nx.maximum_flow(G_phase_2, 't', 's', capacity='capacity')
-            print(f'Max flow: {max_flow}')
-            print(f'Flow dict: {flow_dict}')
-            # Update the capacities of the edges
-            for u in G_phase_2.nodes:
-                for v in G_phase_2.nodes:
-                    if (u, v) in G_phase_2.edges:
-                        G_phase_2.edges[u, v]['capacity'] -= abs(flow_dict[u][v])
-                        # if G_phase_2.edges[u, v]['capacity'] == 0:
-                        #     G_phase_2.remove_edge(u, v)
-                        #     G_phase_2.remove_edge(v, u)
-            
-            G_phase_2.remove_node('s')
+            for partition in p1_list:
+                partition.P = ((partition.P[0] - {'s'}) | S, partition.P[1] | T)
+                partition.min_cut = ((partition.min_cut[0] - {'s'}) | S, partition.min_cut[1] | (T_prime - {'t'}) | T)
+                partition.value = sum([G[u][v]['capacity'] for u in partition.min_cut[0] for v in partition.min_cut[1] if G.has_edge(u, v)])
 
-            phase_2_partitions = hao_orlin(G_phase_2.copy(), 't', yeh=True)
+        if r > 0:
+            # Phase 2
+            G_res_p2 = G_res_flow.copy()
+            G_res_p2.remove_nodes_from(S_prime)
+            G_res_p2.reverse()
+            assert set(G_res_p2.nodes) == T_prime
 
-            for partition_2 in phase_2_partitions:
-                if partition.P == ({0}, {1}):
-                    print('Ich bin hier')
-                    print(partition_2.min_cut)
-                    print(partition_2.P)
-                partition_2.P = (partition_2.P[1] | S_prime, (partition_2.P[0] - set('t')) | T)
-                
-                partition_2.min_cut = (partition_2.min_cut[1] | S_prime, (partition_2.min_cut[0] - set('t')) | T)
-                partition_2.value = sum([G.edges[u, v]['capacity'] for u in partition_2.min_cut[0] for v in partition_2.min_cut[1] if (u, v) in G.edges])
-                if partition.P == ({0}, {1}):
-                    print('Ich bin nicht hier')
-                    print(partition_2.min_cut, partition_2.value)
-                    for edge in G.edges:
-                        if edge[0] in partition_2.min_cut[0] and edge[1] in partition_2.min_cut[1]:
-                            print(f'Edge {edge} with capacity {G.edges[edge]["capacity"]}')
+            p2_list = hao_orlin(G_res_p2, 't', yeh=True)
 
+            for partition in p2_list:
+                partition.P = (partition.P[1] | (S_prime - {'s'}) | S, (partition.P[0] - {'t'}) | T)
+                partition.min_cut = (partition.min_cut[1] | (S_prime - {'s'}) | S, (partition.min_cut[0] - {'t'}) | T)
+                partition.value = sum([G[u][v]['capacity'] for u in partition.min_cut[0] for v in partition.min_cut[1] if G.has_edge(u, v)])
 
-        print('-----')
-        return phase_1_partitions + phase_2_partitions
+        return p1_list + p2_list
 
 
     # Initialize the queue
     queue = PriorityQueue()
     for partition in basic_partition():
-        print(f'Partition: {partition.P} with min_cut {partition.min_cut} and value {partition.value}')
         queue.put(partition)
-    print(f'Queue size: {queue.qsize()}')
     
 
     # Main loop
@@ -169,17 +125,10 @@ def yeh_directed(G):
         current_partition = queue.get()
         enumerated_cuts.append(current_partition)
         for partition in extract_min_partition(current_partition):
-            print(f'Partition: {partition.P} with min_cut {partition.min_cut} and value {partition.value}')
             queue.put(partition)
-
-    # Add inf cut
-    enumerated_cuts.append(Partition({'value': math.inf, 'P': (set(), set()), 'cut': (set(), set()), 'residual_graph': G.copy()}))
-
-    # Remove duplicates
-    enumerated_cuts_deduped = []
-    for cut in enumerated_cuts:
-        if cut not in enumerated_cuts_deduped:
-            enumerated_cuts_deduped.append(cut)
+    
+    # Add infinite cut
+    enumerated_cuts.append(Partition({'value': math.inf, 'P': (set(G.nodes), set()), 'cut': (set(G.nodes), set())}))
             
     return enumerated_cuts
 
@@ -188,13 +137,6 @@ def yeh(G):
     """
     Wrapper function for undirected graphs.
     """
-    # print(f'Pre-map: G has nodes {G.nodes}')
-    # for edge in G.edges:
-    #     print(f'G has edge {edge} with capacity {G.edges[edge]["capacity"]}')
-    # G = nx.convert_node_labels_to_integers(G)
-    # print(f'Post-map: G has nodes {G.nodes}')
-    # for edge in G.edges:
-    #     print(f'G has edge {edge} with capacity {G.edges[edge]["capacity"]}')
     return yeh_directed(G.to_directed())
 
 
@@ -211,30 +153,7 @@ if __name__ == '__main__':
     G.add_edge('B', 'D', capacity=4)
     G.add_edge('E', 'D', capacity=4)
 
-    G2 = nx.read_graphml('data/example_molecules/89.graphml')
-    for edge in G2.edges:
-        G2.edges[edge]['capacity'] = G2.edges[edge]['order']
-
-    G = nx.Graph()
-    G.add_edges_from(
-        [
-            (0, 1, {"capacity": 4}),
-            (0, 7, {"capacity": 8}),
-            (1, 7, {"capacity": 11}),
-            (1, 2, {"capacity": 8}),
-            (2, 8, {"capacity": 2}),
-            (2, 5, {"capacity": 4}),
-            (2, 3, {"capacity": 7}),
-            (3, 4, {"capacity": 9}),
-            (3, 5, {"capacity": 14}),
-            (4, 5, {"capacity": 10}),
-            (5, 6, {"capacity": 2}),
-            (6, 8, {"capacity": 6}),
-            (7, 8, {"capacity": 7}),
-        ]
-    )
-
-
     cuts = yeh(G)
+    print('\nEnumerated cuts:')
     for cut in cuts:
-        print(cut.value, cut.P, cut.min_cut)
+        print(f'Value: {cut.value}, P: {cut.P}, min-cut: {cut.min_cut}')

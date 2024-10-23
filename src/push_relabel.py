@@ -87,12 +87,6 @@ def push_relabel_directed(G, s, t, yeh=False):
         return (S, T)
 
     initialize()
-    for u, v in G.edges:
-        print(u, v, G.edges[u, v]['capacity'])
-
-    print("-----------")
-    for v in G.nodes:
-        print(v, G.nodes[v]['excess'], G.nodes[v]['height'], G.nodes[v]['distance'])
 
     # Push preflow from s to neighbors
     for u in G.neighbors(s):
@@ -112,13 +106,7 @@ def push_relabel_directed(G, s, t, yeh=False):
     if yeh == False:
         return (cut_value, (S, T))
     else:
-        for edge in saturated_edges:
-            print(edge)
-            G.remove_edge(edge[0], edge[1])
-            G.remove_edge(edge[1], edge[0])
-        for edge in G.edges:
-            G[edge[0]][edge[1]]['capacity'] -= abs(G[edge[0]][edge[1]]['preflow'])
-        return G
+        return (G, S, T, cut_value)
     
 
 def push_relabel(G, s, t, yeh=False):
