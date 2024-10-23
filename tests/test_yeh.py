@@ -1,8 +1,5 @@
-import networkx as nx
 import pytest
-from math import inf
-from src.vazirani_yannakakis import vazirani_yannakakis, collapse_graph, Cut
-from src.cut_bases import cut_partition_to_edge_partition
+from src.vazirani_yannakakis import vazirani_yannakakis
 from src.yeh_original import yeh
 
 

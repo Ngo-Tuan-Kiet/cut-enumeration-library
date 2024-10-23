@@ -235,7 +235,6 @@ def vazirani_yannakakis_directed(G: nx.DiGraph) -> list[Cut]:
 
         # Add the current cut to the list of enumerated cuts
         enumerated_cuts.append(current_cut)
-        # print(current_cut.value, current_cut.partition_vector)
 
         # Get the immediate children of the current cut
         immediate_children = get_immediate_children(current_cut.mother, current_cut.partition_vector)
@@ -280,9 +279,7 @@ def greedy_vazirani_yannakakis_directed(G: nx.DiGraph) -> list[Cut]:
         edge_vectors.append(current_edge_vector)
         cut_basis.append(current_cut)
         matrix = cb.edge_vectors_to_matrix(edge_vectors)
-        for line in matrix:
-            print(line)
-        print()
+
         if fg.has_dependent_rows(matrix):
             edge_vectors.pop()
             cut_basis.pop()

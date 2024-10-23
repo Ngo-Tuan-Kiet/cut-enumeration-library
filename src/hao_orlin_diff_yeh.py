@@ -32,13 +32,11 @@ def hao_orlin_directed(G, s) -> list[Partition]:
             G.nodes[v]['excess'] = 0
             # check if height is already an attribute
             if 'height' not in G.nodes[v]:
-                print('Height not in G.nodes')
                 G.nodes[v]['height'] = 0
         G.nodes[s]['excess'] = math.inf
         G.nodes[s]['height'] = len(G.nodes)
         
         for u, v in G.edges:
-            #G.add_edge(v, u, capacity= G.edges[u, v]['capacity'], preflow=0)
             G.edges[u, v]['preflow'] = 0
             G.edges[v, u]['preflow'] = 0
 
@@ -58,9 +56,6 @@ def hao_orlin_directed(G, s) -> list[Partition]:
         G.nodes[v]['excess'] += send
         G.edges[u, v]['preflow'] += send
         G.edges[v, u]['preflow'] -= send
-
-        
-        
         
         if v != s and v != t and G.nodes[v]['height'] < k and v not in ACTIVE_NODES: # and v!= t_prime
             ACTIVE_NODES.append(v)
@@ -107,8 +102,7 @@ def hao_orlin_directed(G, s) -> list[Partition]:
         """
         for v in G.neighbors(u):
             if G.nodes[u]['height'] == G.nodes[v]['height'] + 1 and G.edges[u, v]['capacity'] - G.edges[u, v]['preflow'] > 0 and v not in X and G.nodes[u]['excess'] > 0:
-                push(u, v)
-                # return  
+                push(u, v) 
                 
         relabel(u)
 
@@ -168,25 +162,17 @@ def hao_orlin_directed(G, s) -> list[Partition]:
 
     while X != V:
         
-        while ACTIVE_NODES: # TODO: ACTIVE NODES may be empty at some point
+        while ACTIVE_NODES:
             
             u = ACTIVE_NODES.pop()
             discharge(u)
-            # k = get_cut_level()
-            # 
-            # for u in G.nodes:
-            #     if u in ACTIVE_NODES:
-            #         ACTIVE_NODES.remove(u)
-            #     if G.nodes[u]['excess'] > 0 and G.nodes[u]['height'] < k and u != t and u not in X:
-            #         ACTIVE_NODES.append(u)
-            # 
+
             if G.nodes[u]['excess'] > 0 and G.nodes[u]['height'] < k and u not in ACTIVE_NODES:
                 ACTIVE_NODES.append(u)
         
         S = set([i for i in V if G.nodes[i]['height'] >= k and i != t])
-        # k = get_cut_level()
 
-        current_cut_value = G.nodes[t]['excess'] # aber der cut ist dann falsch???
+        current_cut_value = G.nodes[t]['excess']
         current_cut_value = get_cut_value(S)
         min_cut_value = current_cut_value
         cut = (S.copy(), V - S)
@@ -194,19 +180,10 @@ def hao_orlin_directed(G, s) -> list[Partition]:
 
         residual_graph = G.copy()
         for u, v in G.edges:
-            # print(f'Edge {u} {v} with capacity {G.edges[u, v]["capacity"]} and preflow {G.edges[u, v]["preflow"]}')
             residual_graph.edges[u, v]['capacity'] = G.edges[u, v]['capacity'] - abs(G.edges[u, v]['preflow'])
             residual_graph.edges[u, v]['preflow'] = 0
-            # residual_graph.edges[v, u]['capacity'] = G.edges[u, v]['capacity'] - G.edges[u, v]['preflow']
             if abs(G.edges[u, v]['preflow']) == G.edges[u, v]['capacity']:
                 residual_graph.remove_edge(u, v)
-                # residual_graph.remove_edge(v, u)
-            # print('---')
-
-        # Print edges with attributes
-        # print('Edges with attribute')
-        # for edge in residual_graph.edges:
-        #     print(f'Edge {edge} with capacity {residual_graph.edges[edge[0], edge[1]]["capacity"]}')
 
         yeh_list.append(Partition({'value': min_cut_value, 'P': P, 'cut': cut, 'residual_graph': G.copy()}))
 
@@ -231,24 +208,3 @@ def hao_orlin_directed(G, s) -> list[Partition]:
 
 def hao_orlin(G, s):
     return hao_orlin_directed(G, s) if G.is_directed() else hao_orlin_directed(G.to_directed(), s)
-
-
-if __name__ == '__main__':
-    G = nx.Graph()
-    G.add_edge("a", "b", capacity=6)
-    G.add_edge("a", "c", capacity=2)
-    G.add_edge("c", "d", capacity=1)
-    G.add_edge("c", "e", capacity=7)
-    G.add_edge("c", "f", capacity=9)
-    G.add_edge("a", "d", capacity=3)
-
-    G2 = nx.Graph()
-    G2.add_edge(1, 2, capacity=6)
-    G2.add_edge(1, 3, capacity=2)
-    G2.add_edge(3, 4, capacity=1)
-    G2.add_edge(3, 5, capacity=7)
-    G2.add_edge(3, 6, capacity=9)
-    G2.add_edge(1, 4, capacity=3)
-
-    min_cut = hao_orlin(G2, 1)
-    

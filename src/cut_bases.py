@@ -6,8 +6,6 @@ import vazirani_yannakakis as vy
 def cut_partition_to_edge_partition(G: nx.DiGraph, cut_partition) -> set:
     edge_partition = set()
     for edge in G.edges():
-        # print(edge)
-        # print(cut_partition)
         if edge[0] in cut_partition[0] and edge[1] in cut_partition[1] \
         or edge[0] in cut_partition[1] and edge[1] in cut_partition[0]:
             edge_partition.add(edge)

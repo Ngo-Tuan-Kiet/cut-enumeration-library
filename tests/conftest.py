@@ -124,7 +124,7 @@ def icl_weighted_graph():
     G.add_edge('B', 'D', capacity=4)
     G.add_edge('E', 'D', capacity=4)
 
-    # for conssistent input comment out the following lines (also change parametrize in test_hao_orlin.py)
+    # for consistent input comment out the following lines (also change parametrize in test_hao_orlin.py)
     # mapping = {'A': 2, 'B': 3, 'C': 6, 'D': 5, 'E': 4, 'F': 1}
     # G.add_edge(mapping['A'], mapping['B'], capacity=3)
     # G.add_edge(mapping['A'], mapping['C'], capacity=2)
